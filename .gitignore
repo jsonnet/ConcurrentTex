@@ -14,3 +14,7 @@ __pycache__
 # Output and PDFs
 *.out
 *.pdf
+
+pdfbuild\.py
+
+\.DS_Store
