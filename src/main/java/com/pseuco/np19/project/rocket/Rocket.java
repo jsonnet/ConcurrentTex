@@ -13,12 +13,11 @@ import com.pseuco.np19.project.slug.tree.Document;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
-import static com.pseuco.np19.project.launcher.render.Dummy.DUMMY;
 
 public class Rocket implements ParagraphManager {
 
@@ -27,7 +26,7 @@ public class Rocket implements ParagraphManager {
     private Configuration configuration;
     private boolean allFinished;
     private int countAssignments, numBlockElements, threadsDone;
-    private Object[] itemLists;
+    private List[] itemLists;
     private Thread[] threads;
 
     public Rocket(Unit unit) {
@@ -37,7 +36,6 @@ public class Rocket implements ParagraphManager {
         this.countAssignments = -1;
         this.document = new Document();
         this.threadsDone = 0;
-        //this.itemLists = new List<Item<Renderable>>[]; //must be done later
     }
 
     public static void main(String[] arguments) {
@@ -69,11 +67,11 @@ public class Rocket implements ParagraphManager {
 
         Parser.parse(this.unit.getInputReader(), document);
         this.numBlockElements = document.getElements().size();
-        System.out.println(this.numBlockElements + " are about to be processed");
+        //System.out.println(this.numBlockElements + " are about to be processed");
         // We use an ArrayList because a normal array would cause generic error
         // This internally is just an array and it will not copy itself to make it bigger so there should
         // not be a concurrency problem
-        itemLists = new Object[this.numBlockElements + 1];
+        itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
 
         //Get the amount of availabe Processors to spawn dynamic range of Threads
         int cores = Runtime.getRuntime().availableProcessors();
@@ -82,7 +80,6 @@ public class Rocket implements ParagraphManager {
             threads[i] = new ParagraphThread(this.configuration, i, this);
             threads[i].start();
         }
-
 
         while (!(allFinished && (this.threadsDone == threads.length))) {
             try {
@@ -99,33 +96,29 @@ public class Rocket implements ParagraphManager {
                 System.out.println("Got problem while joining!");
             }
         }
-        System.out.println("Reached end of processing. Time to put it all together");
+        //System.out.println("Reached end of processing. Time to put it all together");
 
+        // Empty page
         var empty = new LinkedList<>();
         this.configuration.getBlockFormatter().pushForcedPageBreak(empty::add);
-
         this.itemLists[this.itemLists.length - 1] = empty;
 
-        List<Item<Renderable>> items = new LinkedList<>();
-
-        for (Object l: this.itemLists)
-            items.addAll((LinkedList)l);
+        // Joining list of lists
+        List<Item<Renderable>> items = new ArrayList<>();
+        Stream.of(itemLists).forEachOrdered(items::addAll);
+        //System.out.println("Joined");
 
         try {
-            final List<Piece<Renderable>> pieces = breakIntoPieces(
-                    this.configuration.getBlockParameters(),
-                    items,
-                    this.configuration.getBlockTolerances(),
-                    this.configuration.getGeometry().getTextHeight()
-            );
+            final List<Piece<Renderable>> pieces = breakIntoPieces(this.configuration.getBlockParameters(), items, this.configuration.getBlockTolerances(), this.configuration.getGeometry().getTextHeight());
 
             this.unit.getPrinter().printPages(this.unit.getPrinter().renderPages(pieces));
         } catch (UnableToBreakException ignored) {
             this.unit.getPrinter().printErrorPage();
             System.err.println("Unable to break lines!");
         }
+
         this.unit.getPrinter().finishDocument();
-        System.out.println("Hype");
+        //System.out.println("Hype");
     }
 
     @Override
@@ -155,7 +148,7 @@ public class Rocket implements ParagraphManager {
     }
 
     @Override
-    public synchronized void closeJob(BlockElementJob job) {
+    public void closeJob(BlockElementJob job) {
         this.itemLists[job.getJobID()] = job.getFinishedList();
     }
 

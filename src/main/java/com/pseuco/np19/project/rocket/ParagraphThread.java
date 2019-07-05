@@ -18,7 +18,7 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class ParagraphThread extends Thread implements IBlockVisitor {
 
     private final Configuration configuration;
-    private final List<Item<Renderable>> items = new LinkedList<>();
+    private List<Item<Renderable>> items = new LinkedList<>();
     private int id;
     private ParagraphManager paragraphManager;
 
@@ -44,14 +44,16 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
             job.setFinishedList(this.items);
             paragraphManager.closeJob(job);
 
-            System.out.println("Thread " + this.id + " or " + Thread.currentThread() + " finished " + job.getJobID());
+            //System.out.println("Thread " + this.id + " or " + Thread.currentThread() + " finished " + job.getJobID());
 
             // Get a new job
             job = paragraphManager.assignNewBlock();
 
             if (job != null) element = job.getElement();
+
+            items = new LinkedList<>();
         }
-        System.out.println("I - Thread " + this.id + " - sign off now");
+        //System.out.println("I - Thread " + this.id + " - sign off now");
         //paragraphManager.notifyAll();
     }
 
