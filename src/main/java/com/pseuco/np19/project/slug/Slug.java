@@ -81,7 +81,6 @@ public class Slug implements IBlockVisitor {
                 return;
             }
         }
-
         this.configuration.getBlockFormatter().pushForcedPageBreak(this.items::add);
 
         try {

@@ -18,12 +18,11 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class ParagraphThread extends Thread implements IBlockVisitor {
 
     private final Configuration configuration;
+    private final List<Item<Renderable>> items = new LinkedList<>();
     private int id;
     private ParagraphManager paragraphManager;
-    private boolean unableToBreak = false;
-    private final List<Item<Renderable>> items = new LinkedList<>();
 
-    public ParagraphThread(Configuration config, int id, ParagraphManager pm){
+    public ParagraphThread(Configuration config, int id, ParagraphManager pm) {
         this.configuration = config;
         this.id = id;
         this.paragraphManager = pm;
@@ -36,10 +35,10 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
         BlockElement element = job.getElement();
 
         // If the element to process is null there is nothing more to do so terminate
-        while(job != null){
-//            synchronized (element) {
-                element.accept(this);
-//            }
+        while (job != null && !Thread.currentThread().isInterrupted()) {
+            //synchronized (element) {
+            element.accept(this);
+            //}
 
             //Write back the result in ArrayList of Rocket
             job.setFinishedList(this.items);
@@ -64,18 +63,13 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
 
         try {
             // break the items into pieces using the Knuth-Plass algorithm
-            final List<Piece<Renderable>> lines = breakIntoPieces(
-                    this.configuration.getInlineParameters(),
-                    items,
-                    this.configuration.getInlineTolerances(),
-                    this.configuration.getGeometry().getTextWidth()
-            );
+            final List<Piece<Renderable>> lines = breakIntoPieces(this.configuration.getInlineParameters(), items, this.configuration.getInlineTolerances(), this.configuration.getGeometry().getTextWidth());
 
             // transform lines into items and append them to `this.items`
             this.configuration.getBlockFormatter().pushParagraph(this.items::add, lines);
         } catch (UnableToBreakException error) {
             System.err.println("Unable to break paragraph!");
-            this.unableToBreak = true;
+            paragraphManager.handleBrokenDoc();
         }
     }
 
