@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="0.0" y="200.0">com.pseuco.np19.project.launcher.render.HContainer</node>
+    <node x="777.0" y="831.0">com.pseuco.np19.project.launcher.font.Font</node>
+    <node x="273.0" y="831.0">com.pseuco.np19.project.rocket.Rocket</node>
+    <node x="14.0" y="371.0">com.pseuco.np19.project.launcher.printer.Page</node>
+    <node x="658.0" y="831.0">com.pseuco.np19.project.launcher.cli.Unit</node>
+    <node x="567.0" y="518.0">com.pseuco.np19.project.slug.tree.block.IBlockVisitor</node>
+    <node x="804.7638888888889" y="76.0">com.pseuco.np19.project.slug.tree.inline.Hyphen</node>
+    <node x="658.0" y="760.0">com.pseuco.np19.project.launcher.font.FontSpec</node>
+    <node x="591.5" y="152.0">com.pseuco.np19.project.slug.tree.inline.Special</node>
+    <node x="534.0" y="665.0">com.pseuco.np19.project.launcher.font.FontNotFoundException</node>
+    <node x="196.0" y="518.0">com.pseuco.np19.project.launcher.formatter.BlockFormatter</node>
+    <node x="910.0" y="518.0">com.pseuco.np19.project.launcher.printer.Geometry</node>
+    <node x="247.49999999999997" y="0.0">com.pseuco.np19.project.launcher.render.Renderable</node>
+    <node x="406.0" y="831.0">com.pseuco.np19.project.launcher.breaker.Piece</node>
+    <node x="0.0" y="902.0">com.pseuco.np19.project.launcher.breaker.Sum</node>
+    <node x="896.0" y="831.0">com.pseuco.np19.project.launcher.cli.CLI</node>
+    <node x="272.0" y="176.0">com.pseuco.np19.project.launcher.render.Container.Direction</node>
+    <node x="350.0" y="760.0">com.pseuco.np19.project.launcher.breaker.Breakpoint</node>
+    <node x="706.5000000000001" y="152.0">com.pseuco.np19.project.slug.tree.inline.Syllable</node>
+    <node x="220.5" y="594.0">com.pseuco.np19.project.launcher.formatter.BlockFormatter.Builder</node>
+    <node x="385.0" y="518.0">com.pseuco.np19.project.launcher.Configuration</node>
+    <node x="697.0" y="295.0">com.pseuco.np19.project.launcher.formatter.InlineFormatter</node>
+    <node x="140.0" y="831.0">com.pseuco.np19.project.launcher.parser.Parser</node>
+    <node x="147.0" y="295.0">com.pseuco.np19.project.launcher.breaker.Fitness</node>
+    <node x="912.7638888888889" y="76.0">com.pseuco.np19.project.slug.tree.inline.Space</node>
+    <node x="725.0" y="371.0">com.pseuco.np19.project.launcher.formatter.InlineFormatter.Builder</node>
+    <node x="0.0" y="831.0">com.pseuco.np19.project.launcher.printer.Printer</node>
+    <node x="772.0" y="665.0">com.pseuco.np19.project.slug.tree.inline.IInlineVisitor</node>
+    <node x="532.0" y="831.0">com.pseuco.np19.project.launcher.font.Glyph</node>
+    <node x="612.7638888888889" y="76.0">com.pseuco.np19.project.slug.tree.inline.ValueInlineElement</node>
+    <node x="0.0" y="447.0">com.pseuco.np19.project.launcher.printer.Page.Fragment</node>
+    <node x="175.0" y="760.0">com.pseuco.np19.project.launcher.cli.CLIException</node>
+    <node x="268.5" y="88.0">com.pseuco.np19.project.launcher.render.Text</node>
+    <node x="135.99999999999997" y="200.0">com.pseuco.np19.project.launcher.render.VContainer</node>
+    <node x="352.75" y="371.0">com.pseuco.np19.project.slug.tree.block.Paragraph</node>
+    <node x="0.0" y="665.0">com.pseuco.np19.project.launcher.font.StandardFonts</node>
+    <node x="759.5" y="594.0">com.pseuco.np19.project.launcher.breaker.Parameters.Builder</node>
+    <node x="598.5" y="594.0">com.pseuco.np19.project.slug.Slug</node>
+    <node x="406.0" y="594.0">com.pseuco.np19.project.launcher.Configuration.Builder</node>
+    <node x="362.5" y="76.0">com.pseuco.np19.project.launcher.render.Dummy</node>
+    <node x="24.5" y="594.0">com.pseuco.np19.project.slug.tree.Document</node>
+    <node x="749.0" y="518.0">com.pseuco.np19.project.launcher.breaker.Parameters</node>
+    <node x="805.0" y="760.0">com.pseuco.np19.project.launcher.breaker.Breaker</node>
+    <node x="511.0" y="760.0">com.pseuco.np19.project.launcher.parser.Position</node>
+    <node x="3.5" y="295.0">com.pseuco.np19.project.launcher.render.Surface</node>
+    <node x="913.5" y="594.0">com.pseuco.np19.project.launcher.printer.Geometry.Builder</node>
+    <node x="779.7500000000001" y="0.0">com.pseuco.np19.project.slug.tree.inline.InlineElement</node>
+    <node x="0.0" y="760.0">com.pseuco.np19.project.launcher.font.FontRegistry</node>
+    <node x="289.0" y="665.0">com.pseuco.np19.project.launcher.breaker.UnableToBreakException</node>
+    <node x="139.49999999999997" y="88.0">com.pseuco.np19.project.launcher.render.Container</node>
+    <node x="301.0" y="295.0">com.pseuco.np19.project.launcher.parser.ParagraphBuilder</node>
+    <node x="501.0" y="371.0">com.pseuco.np19.project.slug.tree.block.ForcedPageBreak</node>
+    <node x="0.0" y="518.0">com.pseuco.np19.project.launcher.parser.DocumentBuilder</node>
+    <node x="479.0" y="295.0">com.pseuco.np19.project.slug.tree.block.BlockElement</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="com.pseuco.np19.project.launcher.render.HContainer" target="com.pseuco.np19.project.launcher.render.Container">
+      <point x="0.0" y="-13.0" />
+      <point x="58.0" y="151.0" />
+      <point x="157.66666666666663" y="151.0" />
+      <point x="-36.33333333333334" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.inline.ValueInlineElement" target="com.pseuco.np19.project.slug.tree.inline.InlineElement">
+      <point x="0.0" y="-13.0" />
+      <point x="698.7638888888889" y="51.0" />
+      <point x="802.5833333333335" y="51.0" />
+      <point x="-45.66666666666663" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.Configuration.Builder" target="com.pseuco.np19.project.launcher.Configuration">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.render.VContainer" target="com.pseuco.np19.project.launcher.render.Container">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.render.Text" target="com.pseuco.np19.project.launcher.render.Renderable">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.Slug" target="com.pseuco.np19.project.slug.tree.block.IBlockVisitor">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.formatter.BlockFormatter.Builder" target="com.pseuco.np19.project.launcher.formatter.BlockFormatter">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.Document" target="com.pseuco.np19.project.launcher.parser.DocumentBuilder">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.inline.Special" target="com.pseuco.np19.project.slug.tree.inline.ValueInlineElement">
+      <point x="0.0" y="-13.0" />
+      <point x="639.0" y="127.0" />
+      <point x="655.7638888888889" y="127.0" />
+      <point x="-43.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.inline.Hyphen" target="com.pseuco.np19.project.slug.tree.inline.InlineElement">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.printer.Geometry.Builder" target="com.pseuco.np19.project.launcher.printer.Geometry">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.block.ForcedPageBreak" target="com.pseuco.np19.project.slug.tree.block.BlockElement">
+      <point x="0.0" y="-13.0" />
+      <point x="32.5" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.block.Paragraph" target="com.pseuco.np19.project.slug.tree.block.BlockElement">
+      <point x="27.25" y="-13.0" />
+      <point x="434.5" y="346.0" />
+      <point x="511.5" y="346.0" />
+      <point x="-32.5" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.render.Container.Direction" target="com.pseuco.np19.project.launcher.render.Container">
+      <point x="0.0" y="-37.0" />
+      <point x="327.0" y="151.0" />
+      <point x="230.33333333333331" y="151.0" />
+      <point x="36.33333333333334" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.printer.Page.Fragment" target="com.pseuco.np19.project.launcher.printer.Page">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.block.Paragraph" target="com.pseuco.np19.project.launcher.parser.ParagraphBuilder">
+      <point x="-27.25" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.formatter.InlineFormatter.Builder" target="com.pseuco.np19.project.launcher.formatter.InlineFormatter">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.printer.Page" target="com.pseuco.np19.project.launcher.render.Surface">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.render.Container" target="com.pseuco.np19.project.launcher.render.Renderable">
+      <point x="0.0" y="-13.0" />
+      <point x="193.99999999999997" y="51.0" />
+      <point x="266.83333333333326" y="51.0" />
+      <point x="-38.666666666666686" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.inline.Space" target="com.pseuco.np19.project.slug.tree.inline.InlineElement">
+      <point x="0.0" y="-13.0" />
+      <point x="953.2638888888889" y="51.0" />
+      <point x="893.9166666666667" y="51.0" />
+      <point x="45.66666666666663" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.render.Dummy" target="com.pseuco.np19.project.launcher.render.Renderable">
+      <point x="0.0" y="-25.0" />
+      <point x="454.5" y="51.0" />
+      <point x="344.16666666666663" y="51.0" />
+      <point x="38.66666666666663" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.slug.tree.inline.Syllable" target="com.pseuco.np19.project.slug.tree.inline.ValueInlineElement">
+      <point x="0.0" y="-13.0" />
+      <point x="757.5000000000001" y="127.0" />
+      <point x="741.7638888888889" y="127.0" />
+      <point x="43.0" y="13.0" />
+    </edge>
+    <edge source="com.pseuco.np19.project.launcher.breaker.Parameters.Builder" target="com.pseuco.np19.project.launcher.breaker.Parameters">
+      <point x="0.0" y="-13.0" />
+      <point x="0.0" y="13.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.8" x="1109.375" y="1560.0" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Inner Classes</Category>
+    <Category>Fields</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>public</VISIBILITY>
+</Diagram>
+
