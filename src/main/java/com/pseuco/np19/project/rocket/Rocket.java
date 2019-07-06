@@ -12,14 +12,19 @@ import com.pseuco.np19.project.launcher.render.Renderable;
 import com.pseuco.np19.project.slug.tree.Document;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.*;
 import java.util.stream.Stream;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class Rocket implements ParagraphManager {
+
+    //INFO : minimal output, FINE/ALL: better for debugging, WARNING: for stuff like unableToBreakPage, SEVERE: exception prints
+    private static final Level LOG_LEVEL = Level.WARNING;
 
     final Document document;
     private Unit unit;
@@ -28,6 +33,27 @@ public class Rocket implements ParagraphManager {
     private int countAssignments, numBlockElements, threadsDone;
     private List[] itemLists;
     private Thread[] threads;
+    public static Logger log = null;
+
+    //Needed for the Logger to display lines as wanted. Advise: do not touch
+    static {
+        InputStream stream = Rocket.class.getClassLoader().
+                getResourceAsStream("logging.properties");
+        try {
+            LogManager.getLogManager().readConfiguration(stream);
+            log = Logger.getLogger(Rocket.class.getName());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        log.setUseParentHandlers(false);
+        ConsoleHandler handler = new ConsoleHandler();
+        // PUBLISH this level
+        handler.setLevel(Level.FINER);
+        log.addHandler(handler);
+        log.setLevel(LOG_LEVEL);   //Setting a level so only specifig logs are printed
+    }
 
     public Rocket(Unit unit) {
         this.unit = unit;
@@ -39,6 +65,7 @@ public class Rocket implements ParagraphManager {
     }
 
     public static void main(String[] arguments) {
+
 
         // This is the same as in Slug but now calling Rocket.handleDocument()
         try {
@@ -68,9 +95,7 @@ public class Rocket implements ParagraphManager {
         Parser.parse(this.unit.getInputReader(), document);
         this.numBlockElements = document.getElements().size();
         //System.out.println(this.numBlockElements + " are about to be processed");
-        // We use an ArrayList because a normal array would cause generic error
-        // This internally is just an array and it will not copy itself to make it bigger so there should
-        // not be a concurrency problem
+        log.log(Level.INFO, this.numBlockElements + " are about to be processed");
         itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
 
         //Get the amount of availabe Processors to spawn dynamic range of Threads
@@ -93,10 +118,11 @@ public class Rocket implements ParagraphManager {
             try {
                 t.join();
             } catch (InterruptedException e) {
-                System.out.println("Got problem while joining!");
+                log.log(Level.SEVERE, "Error while joining paragraph thread in Rocket. Got an InterruptedException");
             }
         }
-        //System.out.println("Reached end of processing. Time to put it all together");
+
+        log.log(Level.INFO, "Reached end of processing. Time to put it all together");
 
         // Empty page
         var empty = new LinkedList<>();
@@ -106,7 +132,7 @@ public class Rocket implements ParagraphManager {
         // Joining list of lists
         List<Item<Renderable>> items = new ArrayList<>();
         Stream.of(itemLists).forEachOrdered(items::addAll);
-        //System.out.println("Joined");
+        log.log(Level.INFO, "JOINED lists in ArrayList");
 
         try {
             final List<Piece<Renderable>> pieces = breakIntoPieces(this.configuration.getBlockParameters(), items, this.configuration.getBlockTolerances(), this.configuration.getGeometry().getTextHeight());
@@ -118,7 +144,7 @@ public class Rocket implements ParagraphManager {
         }
 
         this.unit.getPrinter().finishDocument();
-        //System.out.println("Hype");
+        log.log(Level.INFO, "FINISHED printing a document!");
     }
 
     @Override
@@ -133,7 +159,7 @@ public class Rocket implements ParagraphManager {
             return null;
         }
 
-        //System.out.println("Assigning job " + this.countAssignments);
+        log.log(Level.FINE, "Assigning job " + this.countAssignments);
 
         //Not finished? return new tupel
         return new BlockElementJob(this.countAssignments, this.document.getElements().get(this.countAssignments));
@@ -156,6 +182,6 @@ public class Rocket implements ParagraphManager {
         for (Thread t : threads) {
             t.interrupt();
         }
-        System.out.println("Unable to break, help!");
+        log.log(Level.WARNING, "Unable to break, help!");
     }
 }

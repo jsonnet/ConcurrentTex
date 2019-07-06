@@ -12,6 +12,7 @@ import com.pseuco.np19.project.slug.tree.block.Paragraph;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
@@ -36,15 +37,13 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
 
         // If the element to process is null there is nothing more to do so terminate
         while (job != null && !Thread.currentThread().isInterrupted()) {
-            //synchronized (element) {
             element.accept(this);
-            //}
 
             //Write back the result in ArrayList of Rocket
             job.setFinishedList(this.items);
             paragraphManager.closeJob(job);
 
-            //System.out.println("Thread " + this.id + " or " + Thread.currentThread() + " finished " + job.getJobID());
+            Rocket.log.log(Level.FINE, "Thread " + this.id + " or " + Thread.currentThread() + " finished " + job.getJobID());
 
             // Get a new job
             job = paragraphManager.assignNewBlock();
@@ -53,8 +52,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
 
             items = new LinkedList<>();
         }
-        //System.out.println("I - Thread " + this.id + " - sign off now");
-        //paragraphManager.notifyAll();
+        Rocket.log.log(Level.INFO, "I - Thread " + this.id + " - sign off now");
     }
 
     // The same as in Slug
@@ -70,7 +68,8 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
             // transform lines into items and append them to `this.items`
             this.configuration.getBlockFormatter().pushParagraph(this.items::add, lines);
         } catch (UnableToBreakException error) {
-            System.err.println("Unable to break paragraph!");
+            //System.err.println("Unable to break paragraph!");
+            Rocket.log.log(Level.WARNING, "Unable to break paragraph!");
             paragraphManager.handleBrokenDoc();
         }
     }
