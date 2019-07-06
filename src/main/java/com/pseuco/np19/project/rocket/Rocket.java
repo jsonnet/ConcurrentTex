@@ -24,12 +24,12 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class Rocket implements ParagraphManager {
 
     //INFO : minimal output, FINE/ALL: better for debugging, WARNING: for stuff like unableToBreakPage, SEVERE: exception prints
-    private static final Level LOG_LEVEL = Level.WARNING;
+    private static final Level LOG_LEVEL = Level.SEVERE;
 
     final Document document;
     private Unit unit;
     private Configuration configuration;
-    private boolean allFinished;
+    private boolean allFinished, unableToBreak;
     private int countAssignments, numBlockElements, threadsDone;
     private List[] itemLists;
     private Thread[] threads;
@@ -59,6 +59,7 @@ public class Rocket implements ParagraphManager {
         this.unit = unit;
         this.configuration = this.unit.getConfiguration();
         this.allFinished = false;
+        this.unableToBreak = false;
         this.countAssignments = -1;
         this.document = new Document();
         this.threadsDone = 0;
@@ -106,7 +107,7 @@ public class Rocket implements ParagraphManager {
             threads[i].start();
         }
 
-        while (!(allFinished && (this.threadsDone == threads.length))) {
+        while (!(allFinished && (this.threadsDone == threads.length) || unableToBreak)) {
             try {
                 this.wait();
             } catch (InterruptedException e) {
@@ -114,6 +115,20 @@ public class Rocket implements ParagraphManager {
             }
         }
 
+        //This will finish the document if a paragraph was not able to break. Skip the rest because unnecessary and will cause IO-Errors
+        if(unableToBreak){
+            //The Rocket will take care of printing the last error page!
+            try {
+                this.unit.getPrinter().printErrorPage();
+                this.unit.getPrinter().printErrorPage();
+            } catch (IOException e) {
+                log.log(Level.SEVERE, "Not able to print the ErrorPage and/or finish Document");
+            }
+            log.log(Level.INFO, "Exiting due to not being able to break paragraph. Over and out!");
+            return;
+        }
+
+        // This can only be done after check of unableToBreak because Rocket is not waiting anymore afterwards!
         for (Thread t : threads) {
             try {
                 t.join();
@@ -121,6 +136,8 @@ public class Rocket implements ParagraphManager {
                 log.log(Level.SEVERE, "Error while joining paragraph thread in Rocket. Got an InterruptedException");
             }
         }
+
+
 
         log.log(Level.INFO, "Reached end of processing. Time to put it all together");
 
@@ -144,7 +161,7 @@ public class Rocket implements ParagraphManager {
         }
 
         this.unit.getPrinter().finishDocument();
-        log.log(Level.INFO, "FINISHED printing a document!");
+        log.log(Level.INFO, "FINISHED printing a document!\n\n");
     }
 
     @Override
@@ -182,6 +199,8 @@ public class Rocket implements ParagraphManager {
         for (Thread t : threads) {
             t.interrupt();
         }
+        this.unableToBreak = true;
+        this.notifyAll();
         log.log(Level.WARNING, "Unable to break, help!");
     }
 }

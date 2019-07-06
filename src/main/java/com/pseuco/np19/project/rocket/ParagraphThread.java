@@ -33,7 +33,8 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
     public synchronized void run() {
         //get the next BlockElement to parse
         BlockElementJob job = this.paragraphManager.assignNewBlock();
-        BlockElement element = job.getElement();
+        //This sometimes throws nullpointer exception so this will check job for null and if true while will not be executed
+        BlockElement element = job != null ? job.getElement() : null;
 
         // If the element to process is null there is nothing more to do so terminate
         while (job != null && !Thread.currentThread().isInterrupted()) {
