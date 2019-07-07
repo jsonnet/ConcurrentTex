@@ -30,7 +30,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         //get the next BlockElement to parse
         BlockElementJob job = this.paragraphManager.assignNewBlock();
         //This sometimes throws nullpointer exception so this will check job for null and if true while will not be executed
@@ -58,7 +58,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
 
     // The same as in Slug
     @Override
-    public synchronized void visit(Paragraph paragraph) {
+    public void visit(Paragraph paragraph) {
         // transform the paragraph into a sequence of items
         List<Item<Renderable>> items = paragraph.format(this.configuration.getInlineFormatter());
 
@@ -78,7 +78,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
 
     // Same as in Slug
     @Override
-    public synchronized void visit(ForcedPageBreak forcedPageBreak) {
+    public void visit(ForcedPageBreak forcedPageBreak) {
         // transform forced page break into items and append them to `this.items`
         this.configuration.getBlockFormatter().pushForcedPageBreak(this.items::add);
     }

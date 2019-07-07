@@ -30,8 +30,7 @@ class BlockElementJob {
         return this.finishedList;
     }
 
-    //TODO sync needed here?
-    synchronized void setFinishedList(List<Item<Renderable>> finishedList) {
+    void setFinishedList(List<Item<Renderable>> finishedList) {
         this.finishedList = finishedList;
     }
 }
