@@ -23,7 +23,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
     private int id;
     private ParagraphManager paragraphManager;
 
-    public ParagraphThread(Configuration config, int id, ParagraphManager pm) {
+    ParagraphThread(Configuration config, int id, ParagraphManager pm) {
         this.configuration = config;
         this.id = id;
         this.paragraphManager = pm;
@@ -60,11 +60,11 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
     @Override
     public synchronized void visit(Paragraph paragraph) {
         // transform the paragraph into a sequence of items
-        final List<Item<Renderable>> items = paragraph.format(this.configuration.getInlineFormatter());
+        List<Item<Renderable>> items = paragraph.format(this.configuration.getInlineFormatter());
 
         try {
             // break the items into pieces using the Knuth-Plass algorithm
-            final List<Piece<Renderable>> lines = breakIntoPieces(this.configuration.getInlineParameters(), items, this.configuration.getInlineTolerances(), this.configuration.getGeometry().getTextWidth());
+            List<Piece<Renderable>> lines = breakIntoPieces(this.configuration.getInlineParameters(), items, this.configuration.getInlineTolerances(), this.configuration.getGeometry().getTextWidth());
 
             // transform lines into items and append them to `this.items`
             this.configuration.getBlockFormatter().pushParagraph(this.items::add, lines);

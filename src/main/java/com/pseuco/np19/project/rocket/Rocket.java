@@ -16,7 +16,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
@@ -24,25 +27,15 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class Rocket implements ParagraphManager {
 
     //INFO : minimal output, FINE/ALL: better for debugging, WARNING: for stuff like unableToBreakPage, SEVERE: exception prints
-    private static final Level LOG_LEVEL = Level.SEVERE;
-
-    final Document document;
-    private Unit unit;
-    private Configuration configuration;
-    private boolean allFinished, unableToBreak;
-    private int countAssignments, numBlockElements, threadsDone;
-    private List[] itemLists;
-    private Thread[] threads;
-    public static Logger log = null;
+    private static final Level LOG_LEVEL = Level.OFF;
+    static Logger log;
 
     //Needed for the Logger to display lines as wanted. Advise: do not touch
     static {
-        InputStream stream = Rocket.class.getClassLoader().
-                getResourceAsStream("logging.properties");
+        InputStream stream = Rocket.class.getClassLoader().getResourceAsStream("logging.properties");
         try {
             LogManager.getLogManager().readConfiguration(stream);
             log = Logger.getLogger(Rocket.class.getName());
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -55,7 +48,15 @@ public class Rocket implements ParagraphManager {
         log.setLevel(LOG_LEVEL);   //Setting a level so only specifig logs are printed
     }
 
-    public Rocket(Unit unit) {
+    private final Document document;
+    private Unit unit;
+    private Configuration configuration;
+    private boolean allFinished, unableToBreak;
+    private int countAssignments, numBlockElements, threadsDone;
+    private List[] itemLists;
+    private Thread[] threads;
+
+    private Rocket(Unit unit) {
         this.unit = unit;
         this.configuration = this.unit.getConfiguration();
         this.allFinished = false;
@@ -66,8 +67,6 @@ public class Rocket implements ParagraphManager {
     }
 
     public static void main(String[] arguments) {
-
-
         // This is the same as in Slug but now calling Rocket.handleDocument()
         try {
             List<Unit> units = CLI.parseArgs(arguments);
@@ -91,11 +90,10 @@ public class Rocket implements ParagraphManager {
 
     // this function starts new threads that handle paragraph processes
     // If the threads have finished the document is printed
-    public synchronized void processUnit() throws IOException {
+    private synchronized void processUnit() throws IOException {
 
         Parser.parse(this.unit.getInputReader(), document);
         this.numBlockElements = document.getElements().size();
-        //System.out.println(this.numBlockElements + " are about to be processed");
         log.log(Level.INFO, this.numBlockElements + " are about to be processed");
         itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
 
@@ -109,6 +107,7 @@ public class Rocket implements ParagraphManager {
 
         while (!(allFinished && (this.threadsDone == threads.length) || unableToBreak)) {
             try {
+                //TODO potentially remove the wait and synchronized
                 this.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -116,7 +115,7 @@ public class Rocket implements ParagraphManager {
         }
 
         //This will finish the document if a paragraph was not able to break. Skip the rest because unnecessary and will cause IO-Errors
-        if(unableToBreak){
+        if (unableToBreak) {
             //The Rocket will take care of printing the last error page!
             try {
                 this.unit.getPrinter().printErrorPage();
@@ -128,15 +127,15 @@ public class Rocket implements ParagraphManager {
             return;
         }
 
+        //TODO remove this following part
         // This can only be done after check of unableToBreak because Rocket is not waiting anymore afterwards!
-        for (Thread t : threads) {
+        /*for (Thread t : threads) {
             try {
                 t.join();
             } catch (InterruptedException e) {
                 log.log(Level.SEVERE, "Error while joining paragraph thread in Rocket. Got an InterruptedException");
             }
-        }
-
+        }*/
 
 
         log.log(Level.INFO, "Reached end of processing. Time to put it all together");
@@ -148,11 +147,17 @@ public class Rocket implements ParagraphManager {
 
         // Joining list of lists
         List<Item<Renderable>> items = new ArrayList<>();
+        //TODO unsafe op
         Stream.of(itemLists).forEachOrdered(items::addAll);
         log.log(Level.INFO, "JOINED lists in ArrayList");
 
         try {
-            final List<Piece<Renderable>> pieces = breakIntoPieces(this.configuration.getBlockParameters(), items, this.configuration.getBlockTolerances(), this.configuration.getGeometry().getTextHeight());
+            List<Piece<Renderable>> pieces = breakIntoPieces(
+                    this.configuration.getBlockParameters(),
+                    items,
+                    this.configuration.getBlockTolerances(),
+                    this.configuration.getGeometry().getTextHeight()
+            );
 
             this.unit.getPrinter().printPages(this.unit.getPrinter().renderPages(pieces));
         } catch (UnableToBreakException ignored) {
@@ -180,14 +185,6 @@ public class Rocket implements ParagraphManager {
 
         //Not finished? return new tupel
         return new BlockElementJob(this.countAssignments, this.document.getElements().get(this.countAssignments));
-    }
-
-    public synchronized boolean allThreadsFinished() {
-        for (Thread t : threads) {
-            if (t.isAlive()) return false;
-        }
-
-        return true;
     }
 
     @Override
