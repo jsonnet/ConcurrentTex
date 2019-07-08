@@ -10,10 +10,12 @@ import com.pseuco.np19.project.launcher.cli.Unit;
 import com.pseuco.np19.project.launcher.parser.Parser;
 import com.pseuco.np19.project.launcher.render.Renderable;
 import com.pseuco.np19.project.slug.tree.Document;
+import com.pseuco.np19.project.slug.tree.block.BlockElement;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.ConsoleHandler;
@@ -55,6 +57,7 @@ public class Rocket implements ParagraphManager {
     private int countAssignments, numBlockElements, threadsDone;
     private List[] itemLists;
     private Thread[] threads;
+    private Iterator<BlockElement> elem;
 
     private Rocket(Unit unit) {
         this.unit = unit;
@@ -96,6 +99,7 @@ public class Rocket implements ParagraphManager {
         this.numBlockElements = document.getElements().size();
         log.log(Level.INFO, this.numBlockElements + " are about to be processed");
         itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
+        elem = this.document.getElements().iterator();
 
         //Get the amount of available logic cores to spawn dynamic range of Threads
         int cores = Runtime.getRuntime().availableProcessors();
@@ -105,6 +109,7 @@ public class Rocket implements ParagraphManager {
             threads[i].start();
         }
 
+        //synchronized (this) {
         //TODO unableToBreak not needed as notify below, but saves time
         while (!(allFinished && (this.threadsDone == threads.length) || unableToBreak)) {
             try {
@@ -127,11 +132,11 @@ public class Rocket implements ParagraphManager {
             log.log(Level.INFO, "Exiting due to not being able to break paragraph. Over and out!");
             return;
         }
-
+        //}
         log.log(Level.INFO, "Reached end of processing. Time to put it all together");
 
         // Empty page
-        var empty = new LinkedList<>();
+        LinkedList<Item<Renderable>> empty = new LinkedList<>();
         this.configuration.getBlockFormatter().pushForcedPageBreak(empty::add);
         this.itemLists[this.itemLists.length - 1] = empty;
 
@@ -162,10 +167,11 @@ public class Rocket implements ParagraphManager {
 
     @Override
     public synchronized BlockElementJob assignNewBlock() {
+
         this.countAssignments++;
         // Nothing to do anymore if count is greater than length of overall BlockElements
         // The thread gets null and should handle exiting by itself!
-        if (countAssignments >= this.numBlockElements) {
+        if (countAssignments >= this.numBlockElements) { //!elem.hasNext()
             this.allFinished = true;
             this.threadsDone++;
             this.notifyAll();
@@ -175,7 +181,8 @@ public class Rocket implements ParagraphManager {
         log.log(Level.FINE, "Assigning job " + this.countAssignments);
 
         //Not finished? return new tupel
-        return new BlockElementJob(this.countAssignments, this.document.getElements().get(this.countAssignments));
+        //TODO .get(i) is O(N) -- .next() only O(1)
+        return new BlockElementJob(this.countAssignments, elem.next());
     }
 
     @Override
