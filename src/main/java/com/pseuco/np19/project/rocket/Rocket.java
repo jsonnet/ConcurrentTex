@@ -99,6 +99,7 @@ public class Rocket implements ParagraphManager {
 
         //Get the amount of available logic cores to spawn dynamic range of Threads
         int cores = Runtime.getRuntime().availableProcessors();
+        cores = 2;
         threads = new Thread[cores];
         for (int i = 0; i < cores; i++) {
             threads[i] = new ParagraphThread(this.configuration, i, this);
@@ -138,7 +139,8 @@ public class Rocket implements ParagraphManager {
         // Joining list of lists
         List<Item<Renderable>> items = new ArrayList<>();
         //TODO unsafe op
-        Stream.of(itemLists).forEachOrdered(items::addAll);
+        for (List item : itemLists)
+            items.addAll(item);
         log.log(Level.INFO, "JOINED lists in ArrayList");
 
         try {
