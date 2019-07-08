@@ -99,7 +99,6 @@ public class Rocket implements ParagraphManager {
 
         //Get the amount of available logic cores to spawn dynamic range of Threads
         int cores = Runtime.getRuntime().availableProcessors();
-        cores = 2;
         threads = new Thread[cores];
         for (int i = 0; i < cores; i++) {
             threads[i] = new ParagraphThread(this.configuration, i, this);
