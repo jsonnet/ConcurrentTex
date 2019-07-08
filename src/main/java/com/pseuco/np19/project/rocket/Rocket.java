@@ -97,7 +97,7 @@ public class Rocket implements ParagraphManager {
         log.log(Level.INFO, this.numBlockElements + " are about to be processed");
         itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
 
-        //Get the amount of availabe Processors to spawn dynamic range of Threads
+        //Get the amount of available logic cores to spawn dynamic range of Threads
         int cores = Runtime.getRuntime().availableProcessors();
         threads = new Thread[cores];
         for (int i = 0; i < cores; i++) {
@@ -105,9 +105,10 @@ public class Rocket implements ParagraphManager {
             threads[i].start();
         }
 
+        //TODO unableToBreak not needed as notify below, but saves time
         while (!(allFinished && (this.threadsDone == threads.length) || unableToBreak)) {
             try {
-                //TODO potentially remove the wait and synchronized
+                //TODO wait needed, so other methods of the object can still be executed
                 this.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -119,24 +120,13 @@ public class Rocket implements ParagraphManager {
             //The Rocket will take care of printing the last error page!
             try {
                 this.unit.getPrinter().printErrorPage();
-                this.unit.getPrinter().printErrorPage();
+                this.unit.getPrinter().finishDocument(); //FIXME Lukas pls: finishDocument not printErrorPage
             } catch (IOException e) {
                 log.log(Level.SEVERE, "Not able to print the ErrorPage and/or finish Document");
             }
             log.log(Level.INFO, "Exiting due to not being able to break paragraph. Over and out!");
             return;
         }
-
-        //TODO remove this following part
-        // This can only be done after check of unableToBreak because Rocket is not waiting anymore afterwards!
-        /*for (Thread t : threads) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                log.log(Level.SEVERE, "Error while joining paragraph thread in Rocket. Got an InterruptedException");
-            }
-        }*/
-
 
         log.log(Level.INFO, "Reached end of processing. Time to put it all together");
 
