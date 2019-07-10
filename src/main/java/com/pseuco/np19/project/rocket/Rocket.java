@@ -9,7 +9,6 @@ import com.pseuco.np19.project.launcher.cli.CLIException;
 import com.pseuco.np19.project.launcher.cli.Unit;
 import com.pseuco.np19.project.launcher.parser.Parser;
 import com.pseuco.np19.project.launcher.render.Renderable;
-import com.pseuco.np19.project.slug.tree.Document;
 import com.pseuco.np19.project.slug.tree.block.BlockElement;
 
 import java.io.IOException;
@@ -22,7 +21,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
@@ -32,6 +30,7 @@ public class Rocket implements ParagraphManager {
     private static final Level LOG_LEVEL = Level.OFF;
     static Logger log;
 
+    //TODO maybe we remove this part again or use something different?!
     //Needed for the Logger to display lines as wanted. Advise: do not touch
     static {
         InputStream stream = Rocket.class.getClassLoader().getResourceAsStream("logging.properties");
@@ -50,7 +49,7 @@ public class Rocket implements ParagraphManager {
         log.setLevel(LOG_LEVEL);   //Setting a level so only specifig logs are printed
     }
 
-    private final Document document;
+    private final ConcurrentDocument document;
     private Unit unit;
     private Configuration configuration;
     private boolean allFinished, unableToBreak;
@@ -65,18 +64,20 @@ public class Rocket implements ParagraphManager {
         this.allFinished = false;
         this.unableToBreak = false;
         this.countAssignments = -1;
-        this.document = new Document();
+        this.document = new ConcurrentDocument();
         this.threadsDone = 0;
     }
 
     public static void main(String[] arguments) {
         // This is the same as in Slug but now calling Rocket.handleDocument()
         try {
+            //TODO args parsing is atomic, so need to think about threading
             List<Unit> units = CLI.parseArgs(arguments);
             if (units.isEmpty()) {
                 CLI.printUsage(System.out);
             }
             // we process one unit after another
+            //TODO spawn multiple threads here for each unit (maybe get a new class to handle for simplicity?)
             for (Unit unit : units) {
                 (new Rocket(unit)).processUnit();
             }
@@ -95,25 +96,37 @@ public class Rocket implements ParagraphManager {
     // If the threads have finished the document is printed
     private synchronized void processUnit() throws IOException {
 
+        //TODO run this separate and read document each time and spawn new thread based on the newly found elements
         Parser.parse(this.unit.getInputReader(), document);
+
+        //TODO no.. but could the parsed and thus spawned elements
         this.numBlockElements = document.getElements().size();
-        log.log(Level.INFO, this.numBlockElements + " are about to be processed");
-        itemLists = new LinkedList[this.numBlockElements + 1]; // +1 for last empty page
+
+        //TODO needs to be converted to a ConcurrentHashMap of maybe LinkedList connected to index
+        itemLists = new LinkedList[this.numBlockElements];
+
+        //TODO lets see about this later
         elem = this.document.getElements().iterator();
 
         //Get the amount of available logic cores to spawn dynamic range of Threads
+        //TODO no, we now spawn indefinitely new threads as some could be finished when still parsing
+        // --think about a way to reuse threads?? (To safe time, but difficult to realize)-- But NO
         int cores = Runtime.getRuntime().availableProcessors();
         threads = new Thread[cores];
-        for (int i = 0; i < cores; i++) {
+
+        //FIXME reading unableToBreak could be a data-race write-read 🤦
+        //TODO when we spawn the new threads for the elements check for unableToBreak (IMPORTANT) to stop spawning!
+        for (int i = 0; i < cores && !unableToBreak; i++) {
+            //TODO maybe we just give the thread then his new paraElement
             threads[i] = new ParagraphThread(this.configuration, i, this);
             threads[i].start();
         }
 
-        //synchronized (this) {
-        //TODO unableToBreak not needed as notify below, but saves time
+        //TODO we could still count the elements related to how many finished
         while (!(allFinished && (this.threadsDone == threads.length) || unableToBreak)) {
             try {
-                //TODO wait needed, so other methods of the object can still be executed
+                //wait needed, so other methods of the object can still be executed
+                //TODO should be okay, as breakJob breaks the wait with notify
                 this.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -121,39 +134,35 @@ public class Rocket implements ParagraphManager {
         }
 
         //This will finish the document if a paragraph was not able to break. Skip the rest because unnecessary and will cause IO-Errors
+        //TODO should be okay, no need to change
         if (unableToBreak) {
             //The Rocket will take care of printing the last error page!
             try {
                 this.unit.getPrinter().printErrorPage();
-                this.unit.getPrinter().finishDocument(); //FIXME Lukas pls: finishDocument not printErrorPage
+                this.unit.getPrinter().finishDocument();
             } catch (IOException e) {
                 log.log(Level.SEVERE, "Not able to print the ErrorPage and/or finish Document");
             }
             log.log(Level.INFO, "Exiting due to not being able to break paragraph. Over and out!");
             return;
         }
-        //}
         log.log(Level.INFO, "Reached end of processing. Time to put it all together");
 
-        // Empty page
-        LinkedList<Item<Renderable>> empty = new LinkedList<>();
-        this.configuration.getBlockFormatter().pushForcedPageBreak(empty::add);
-        this.itemLists[this.itemLists.length - 1] = empty;
-
-        // Joining list of lists
+        //TODO yeah let's rethink about this part 1. leave it as it is, or 2. find a way to use the Map with the breakIntoPieces
+        //Joining list of lists (1-2 ms)
         List<Item<Renderable>> items = new ArrayList<>();
-        //TODO unsafe op
         for (List item : itemLists)
             items.addAll(item);
         log.log(Level.INFO, "JOINED lists in ArrayList");
 
+        // PageBreak
+        //TODO should be good to go
+        this.configuration.getBlockFormatter().pushForcedPageBreak(items::add);
+
+        //TODO dunno what to do
         try {
-            List<Piece<Renderable>> pieces = breakIntoPieces(
-                    this.configuration.getBlockParameters(),
-                    items,
-                    this.configuration.getBlockTolerances(),
-                    this.configuration.getGeometry().getTextHeight()
-            );
+            List<Piece<Renderable>> pieces = breakIntoPieces(this.configuration.getBlockParameters(), items, this.configuration.getBlockTolerances(),
+                    this.configuration.getGeometry().getTextHeight());
 
             this.unit.getPrinter().printPages(this.unit.getPrinter().renderPages(pieces));
         } catch (UnableToBreakException ignored) {
@@ -161,6 +170,7 @@ public class Rocket implements ParagraphManager {
             System.err.println("Unable to break lines!");
         }
 
+        //TODO finished this child thread branch should end gracefully with all it's threads
         this.unit.getPrinter().finishDocument();
         log.log(Level.INFO, "FINISHED printing a document!\n\n");
     }
@@ -168,6 +178,7 @@ public class Rocket implements ParagraphManager {
     @Override
     public synchronized BlockElementJob assignNewBlock() {
 
+        //TODO following can be reused
         this.countAssignments++;
         // Nothing to do anymore if count is greater than length of overall BlockElements
         // The thread gets null and should handle exiting by itself!
@@ -180,20 +191,22 @@ public class Rocket implements ParagraphManager {
 
         log.log(Level.FINE, "Assigning job " + this.countAssignments);
 
-        //Not finished? return new tupel
-        //TODO .get(i) is O(N) -- .next() only O(1)
+        //TODO can be removed based on how we realise, but reusing threads is not really a option
         return new BlockElementJob(this.countAssignments, elem.next());
     }
 
     @Override
     public void closeJob(BlockElementJob job) {
+        //TODO here we add to out ConcurrentHashMap with key= ID and val= LinkedList
         this.itemLists[job.getJobID()] = job.getFinishedList();
     }
 
     public synchronized void handleBrokenDoc() {
+        //TODO Something like this
         for (Thread t : threads) {
             t.interrupt();
         }
+        //TODO something against these weird data-races maybe mutex? or other
         this.unableToBreak = true;
         this.notifyAll();
         log.log(Level.WARNING, "Unable to break, help!");

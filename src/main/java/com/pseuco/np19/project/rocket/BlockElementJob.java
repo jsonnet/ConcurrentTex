@@ -6,6 +6,7 @@ import com.pseuco.np19.project.slug.tree.block.BlockElement;
 
 import java.util.List;
 
+//TODO maybe we  remove this again
 class BlockElementJob {
 
     private int jobID;
@@ -20,7 +21,6 @@ class BlockElementJob {
     int getJobID() {
         return this.jobID;
     }
-
 
     BlockElement getElement() {
         return this.element;
