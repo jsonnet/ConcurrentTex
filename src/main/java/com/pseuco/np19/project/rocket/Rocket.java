@@ -71,13 +71,14 @@ public class Rocket implements ParagraphManager {
     public static void main(String[] arguments) {
         // This is the same as in Slug but now calling Rocket.handleDocument()
         try {
-            //TODO args parsing is atomic, so need to think about threading
+            //TODO args parsing is atomic, so no need to think about threading
             List<Unit> units = CLI.parseArgs(arguments);
             if (units.isEmpty()) {
                 CLI.printUsage(System.out);
             }
             // we process one unit after another
-            //TODO spawn multiple threads here for each unit (maybe get a new class to handle for simplicity?)
+            //TODO spawn multiple threads (worker threads based on ThreadPool) here for each unit (maybe get a new class to handle for simplicity?)
+            // these workers are global for each unit also, we need java futures (look into this last one)
             for (Unit unit : units) {
                 (new Rocket(unit)).processUnit();
             }
@@ -109,15 +110,15 @@ public class Rocket implements ParagraphManager {
         elem = this.document.getElements().iterator();
 
         //Get the amount of available logic cores to spawn dynamic range of Threads
-        //TODO no, we now spawn indefinitely new threads as some could be finished when still parsing
-        // --think about a way to reuse threads?? (To safe time, but difficult to realize)-- But NO
+        //TODO we think about doing a WorkingQueue (extra class with ConcurrentBlockingQueue) which distributes them to a global list of workers
+        // but again only based on all avail cores
         int cores = Runtime.getRuntime().availableProcessors();
         threads = new Thread[cores];
 
         //FIXME reading unableToBreak could be a data-race write-read 🤦
-        //TODO when we spawn the new threads for the elements check for unableToBreak (IMPORTANT) to stop spawning!
+        //TODO we move this to before processing the units maybe we need to think about assigning some threads (one for each unit) for parsing but DONOT
+        // leave them idle
         for (int i = 0; i < cores && !unableToBreak; i++) {
-            //TODO maybe we just give the thread then his new paraElement
             threads[i] = new ParagraphThread(this.configuration, i, this);
             threads[i].start();
         }
@@ -159,7 +160,8 @@ public class Rocket implements ParagraphManager {
         //TODO should be good to go
         this.configuration.getBlockFormatter().pushForcedPageBreak(items::add);
 
-        //TODO dunno what to do
+        //TODO dunno what to do, we need a way of knowing when to break our page (i.e. when the page is full) to print it prior completion
+        // probability needs needs changing in parser
         try {
             List<Piece<Renderable>> pieces = breakIntoPieces(this.configuration.getBlockParameters(), items, this.configuration.getBlockTolerances(),
                     this.configuration.getGeometry().getTextHeight());
@@ -170,7 +172,7 @@ public class Rocket implements ParagraphManager {
             System.err.println("Unable to break lines!");
         }
 
-        //TODO finished this child thread branch should end gracefully with all it's threads
+        //TODO the threads should now be free for all other running threads
         this.unit.getPrinter().finishDocument();
         log.log(Level.INFO, "FINISHED printing a document!\n\n");
     }
@@ -191,7 +193,7 @@ public class Rocket implements ParagraphManager {
 
         log.log(Level.FINE, "Assigning job " + this.countAssignments);
 
-        //TODO can be removed based on how we realise, but reusing threads is not really a option
+        //TODO get a new element but not here, worker should handle this itself with Queue
         return new BlockElementJob(this.countAssignments, elem.next());
     }
 

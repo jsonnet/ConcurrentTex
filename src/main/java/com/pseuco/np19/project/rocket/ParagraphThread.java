@@ -23,24 +23,24 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
     private int id;
     private ParagraphManager paragraphManager;
 
-    //TODO gets element and id
     ParagraphThread(Configuration config, int id, ParagraphManager pm) {
         this.configuration = config;
         this.id = id;
         this.paragraphManager = pm;
     }
 
-    //TODO okay, nearly everthing can be rewritten, as most of this goes bye-bye
+    //TODO okay, let's rethink
     @Override
     public void run() {
         //get the next BlockElement to parse
-        //TODO not needed anymore
+        //TODO here we request a new job from our JobQueue (class)
         BlockElementJob job = this.paragraphManager.assignNewBlock();
         //This sometimes throws nullpointer exception so this will check job for null and if true while will not be executed
+        //TODO yeah, the queue should tell us when its empty or we just ask for via empty()
         BlockElement element = job != null ? job.getElement() : null;
 
         // If the element to process is null there is nothing more to do so terminate
-        //TODO need some good way of checking interrupt (free processing for other threads quicker)
+        //TODO need some good way of checking interrupt (frees processing for other threads quicker)
         while (job != null && !Thread.currentThread().isInterrupted()) {
             //TODO this thing is important
             element.accept(this);
@@ -53,7 +53,7 @@ public class ParagraphThread extends Thread implements IBlockVisitor {
             Rocket.log.log(Level.FINE, "Thread " + this.id + " or " + Thread.currentThread() + " finished " + job.getJobID());
 
             // Get a new job
-            //TODO no.. and ends here, nothing further needed
+            //TODO rewrite to a nicer layout, but in principal okay
             job = paragraphManager.assignNewBlock();
 
             if (job != null) element = job.getElement();

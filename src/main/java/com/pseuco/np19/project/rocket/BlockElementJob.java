@@ -6,7 +6,7 @@ import com.pseuco.np19.project.slug.tree.block.BlockElement;
 
 import java.util.List;
 
-//TODO maybe we  remove this again
+//TODO maybe we rethink this one again, and us it as an object for our JobQueue
 class BlockElementJob {
 
     private int jobID;
