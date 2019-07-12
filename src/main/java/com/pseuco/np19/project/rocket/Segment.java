@@ -18,13 +18,14 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class Segment {
     private int id;
-    private Map items; //needs to be map since I need to store in sequence
+    private HashMap<Integer, List> items; //needs to be map since I need to store in sequence
     private int addCounter;
     private int expected = -1;
     private final Configuration config;
     private final Printer printer;
     private ExecutorService executor;
     private UnitData udata;
+    private boolean isFinished = false;
 
     public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata){
         this.items = new HashMap<Integer, List>();
@@ -48,28 +49,33 @@ public class Segment {
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("I am rendering");
+                    //System.out.println("I am rendering");
                     try {
+
+                        LinkedList<Item<Renderable>> itemList = new LinkedList<Item<Renderable>>(); //FIXME: Might not work due to incorrect order adding
+                        for(List l : items.values()){
+                            itemList.addAll(l);
+                        }
 
                         List<Piece<Renderable>> pieces = breakIntoPieces(
                                 config.getBlockParameters(),
-                                new LinkedList<Item<Renderable>>(items.values()), //FIXME: Might not work due to correct order adding
+                                itemList,
                                 config.getBlockTolerances(),
                                 config.getGeometry().getTextHeight()
                         );
 
-                        System.out.println("genau");
+                        //System.out.println("genau");
                         List<Page> renderPages = printer.renderPages(pieces);
                         udata.addPages(renderPages);
-
+                        isFinished = true;
                     } catch (UnableToBreakException e) {
                         System.out.println("Could not render. HELP");
                     }
                 }
             });
 
-
         }
+
     }
 
 }

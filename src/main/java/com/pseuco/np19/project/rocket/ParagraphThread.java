@@ -28,6 +28,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
 
     @Override
     public void run(){
+
         //call correct visit method
         job.getElement().accept(this);
 

@@ -8,11 +8,6 @@ import java.util.List;
 
 public class Rocket {
 
-
-    private Rocket() {
-
-    }
-
     public static void main(String[] arguments) {
 
         try {

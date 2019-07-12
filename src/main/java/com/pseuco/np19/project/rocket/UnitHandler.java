@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This class will create a ThreadPool and submit the tasks to the threads
@@ -23,6 +26,8 @@ public class UnitHandler extends Thread {
     private UnitData udata;
     private ConcurrentDocument document;
 
+
+
     public UnitHandler(Unit unit){
         // Creates ThreadPool for every Unit with max of all available logical cores
         this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -31,13 +36,10 @@ public class UnitHandler extends Thread {
 
         //create an empty document
         this.document = new ConcurrentDocument();
-
-
-
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         //Start a Thread to parse...
         Thread parserThread = new Thread(() -> {
             try {
@@ -53,14 +55,26 @@ public class UnitHandler extends Thread {
             executor.submit(new ParagraphThread(udata, document.getJob(), executor));
         }
 
-        System.out.println("Ja lol ey");
+        //System.out.println("Ja lol ey");
         if(udata.isUnableToBreak()){
+            System.out.println("unable to break. SHUTDOWN initialized!");
             executor.shutdownNow();
         }
 
+        while(udata.getSegmentCount() != document.getSegmentCounter()){
+                //System.out.println("not yet");
+            try {
+                Thread.sleep(10);  //TODO: hier muss gewartet werden. Das hier ist nicht ordentlich und die Bedingung reicht nicht ganz aus
+
+            } catch (InterruptedException e) {
+                System.out.println("Handler waiting interrupted!");
+                e.printStackTrace();
+                break;
+            }
+        }
         //FIXME: what if new render submit by a worker needs to be pushed?
         // This will drop all new submits at this point
-        //executor.shutdown();
+        executor.shutdown();
         try {
             executor.awaitTermination(10, TimeUnit.MINUTES);
         } catch (InterruptedException e) {

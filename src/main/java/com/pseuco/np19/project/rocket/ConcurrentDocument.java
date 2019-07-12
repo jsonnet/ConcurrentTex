@@ -65,11 +65,15 @@ public class ConcurrentDocument implements DocumentBuilder {
         return jobs.isEmpty();  //TODO: Check DataRace or not
     }
 
-    public boolean isFinished(){
+    public synchronized boolean isFinished(){
         return this.isFinished;
     }
 
     public Job getJob() {
         return jobs.poll();
+    }
+
+    public synchronized int getSegmentCounter(){
+        return segmentCounter;
     }
 }
