@@ -15,10 +15,10 @@ import java.util.concurrent.ExecutorService;
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class ParagraphThread implements Runnable, IBlockVisitor {
+    private final LinkedList<Item<Renderable>> items = new LinkedList<>();
     private UnitData udata;
     private Job job;
     private ExecutorService executor;
-    private final LinkedList<Item<Renderable>> items = new LinkedList<>();
 
     public ParagraphThread(UnitData udata, Job job, ExecutorService executor) {
         this.udata = udata;
@@ -27,7 +27,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
     }
 
     @Override
-    public void run(){
+    public void run() {
 
         //call correct visit method
         job.getElement().accept(this);
@@ -36,7 +36,6 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
         job.setFinishedList(this.items);
         //close this job again and exit.
         udata.closeJob(job, executor);
-
     }
 
     @Override
@@ -46,12 +45,8 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
 
         try {
             // break the items into pieces using the Knuth-Plass algorithm
-            final List<Piece<Renderable>> lines = breakIntoPieces(
-                    udata.getConfig().getInlineParameters(),
-                    items,
-                    udata.getConfig().getInlineTolerances(),
-                    udata.getConfig().getGeometry().getTextWidth()
-            );
+            final List<Piece<Renderable>> lines = breakIntoPieces(udata.getConfig().getInlineParameters(), items, udata.getConfig().getInlineTolerances(),
+                    udata.getConfig().getGeometry().getTextWidth());
 
             // transform lines into items and append them to `this.items`
             udata.getConfig().getBlockFormatter().pushParagraph(this.items::add, lines);

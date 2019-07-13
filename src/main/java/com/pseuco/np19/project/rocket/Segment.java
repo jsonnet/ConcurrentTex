@@ -11,23 +11,22 @@ import com.pseuco.np19.project.launcher.render.Renderable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class Segment {
+    private final Configuration config;
+    private final Printer printer;
     private int id;
     private HashMap<Integer, List> items; //needs to be map since I need to store in sequence
     private int addCounter;
     private int expected = -1;
-    private final Configuration config;
-    private final Printer printer;
     private ExecutorService executor;
     private UnitData udata;
     private boolean isFinished = false;
 
-    public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata){
+    public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata) {
         this.items = new HashMap<Integer, List>();
         this.printer = printer;
         this.config = config;
@@ -36,7 +35,7 @@ public class Segment {
     }
 
 
-    public synchronized void add(int seqNmbr, List<Item<Renderable>> l, int expected){
+    public synchronized void add(int seqNmbr, List<Item<Renderable>> l, int expected) {
 
         this.addCounter++;
         this.items.put(seqNmbr, l);
@@ -44,7 +43,7 @@ public class Segment {
         //only set expected if it has not been set yet
         this.expected = expected != -1 ? expected : this.expected;
 
-        if(this.expected == this.addCounter){
+        if (this.expected == this.addCounter) {
             //Rendering is a job for the executer
             executor.submit(new Runnable() {
                 @Override
@@ -53,16 +52,12 @@ public class Segment {
                     try {
 
                         LinkedList<Item<Renderable>> itemList = new LinkedList<Item<Renderable>>(); //FIXME: Might not work due to incorrect order adding
-                        for(List l : items.values()){
+                        for (List l : items.values()) {
                             itemList.addAll(l);
                         }
 
-                        List<Piece<Renderable>> pieces = breakIntoPieces(
-                                config.getBlockParameters(),
-                                itemList,
-                                config.getBlockTolerances(),
-                                config.getGeometry().getTextHeight()
-                        );
+                        List<Piece<Renderable>> pieces = breakIntoPieces(config.getBlockParameters(), itemList, config.getBlockTolerances(),
+                                config.getGeometry().getTextHeight());
 
                         //System.out.println("genau");
                         List<Page> renderPages = printer.renderPages(pieces);
@@ -73,9 +68,6 @@ public class Segment {
                     }
                 }
             });
-
         }
-
     }
-
 }

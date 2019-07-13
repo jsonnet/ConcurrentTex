@@ -19,12 +19,13 @@ public class Rocket {
             UnitHandler[] unitThreads = new UnitHandler[units.size()];
 
             // For every Unit start a new Thread that will process it
-            for (int i=0; i<units.size(); i++) {
+            for (int i = 0; i < units.size(); i++) {
                 unitThreads[i] = new UnitHandler(units.get(i));
                 unitThreads[i].start();
             }
 
-            for(UnitHandler uh : unitThreads){
+            // We wait for the process to die
+            for (UnitHandler uh : unitThreads) {
                 uh.join();
             }
 
@@ -38,6 +39,4 @@ public class Rocket {
             System.exit(1);
         }
     }
-
-
 }

@@ -5,7 +5,6 @@ import com.pseuco.np19.project.launcher.render.Renderable;
 import com.pseuco.np19.project.slug.tree.block.BlockElement;
 
 import java.util.LinkedList;
-import java.util.List;
 
 public class Job {
 
@@ -47,12 +46,12 @@ public class Job {
         return isLast;
     }
 
-    public void setFinishedList(LinkedList<Item<Renderable>> list){
-        this.finishedList = list;
-    }
-
     public LinkedList<Item<Renderable>> getFinishedList() {
         return finishedList;
+    }
+
+    public void setFinishedList(LinkedList<Item<Renderable>> list) {
+        this.finishedList = list;
     }
 
     public int getParasInSegment() {

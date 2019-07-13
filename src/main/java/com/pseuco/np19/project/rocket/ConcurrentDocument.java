@@ -7,10 +7,7 @@ import com.pseuco.np19.project.slug.tree.block.BlockElement;
 import com.pseuco.np19.project.slug.tree.block.ForcedPageBreak;
 import com.pseuco.np19.project.slug.tree.block.Paragraph;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.SynchronousQueue;
 
 public class ConcurrentDocument implements DocumentBuilder {
 
@@ -21,7 +18,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     private boolean isFinished;
 
 
-    public ConcurrentDocument(){
+    public ConcurrentDocument() {
         // Thread safe as long as you do not use ...All() operations
         this.jobs = new LinkedBlockingDeque<Job>();
         this.isFinished = false;
@@ -35,6 +32,7 @@ public class ConcurrentDocument implements DocumentBuilder {
 
         //Since this marks the end of segment reset the counter and keep track that we are working
         //on the next segment
+        //FIXME segCounter datarace?
         this.segmentCounter++;
         this.paragraphCounter = 0;
     }
@@ -58,22 +56,26 @@ public class ConcurrentDocument implements DocumentBuilder {
     public void finish() {
         //Append last pageBreak at the end of whole document
         this.appendForcedPageBreak(null);
+        // FIXME does this one need a sync block? #datarace from below
         this.isFinished = true;     //This flag is helpful for the ThreadPool
     }
 
-    public boolean isJobsEmpty(){
+    public boolean isJobsEmpty() {
         return jobs.isEmpty();  //TODO: Check DataRace or not
     }
 
-    public synchronized boolean isFinished(){
+    //TODO look into this data race, but most certainly is due to read-write
+    public synchronized boolean isFinished() {
         return this.isFinished;
     }
 
     public Job getJob() {
+        // No DataRace due to concurrent data-structure
         return jobs.poll();
     }
 
-    public synchronized int getSegmentCounter(){
+    //TODO look into this data race, but most certainly is due to read-write
+    public synchronized int getSegmentCounter() {
         return segmentCounter;
     }
 }
