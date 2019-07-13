@@ -8,11 +8,11 @@ import java.util.LinkedList;
 
 public class Job {
 
-    private int segmentID;
-    private int seqNumber;
-    private int parasInSegment;
-    private BlockElement element;
-    private boolean isLast;
+    private final int segmentID;
+    private final int seqNumber;
+    private final int parasInSegment;
+    private final boolean isLast;
+    private final BlockElement element;
     private LinkedList<Item<Renderable>> finishedList;
 
     public Job(int segmentID, int seqNumber, BlockElement element) {
@@ -20,6 +20,7 @@ public class Job {
         this.seqNumber = seqNumber;
         this.element = element;
         this.parasInSegment = -1;
+        this.isLast = false;
     }
 
     public Job(int segmentID, int seqNumber, BlockElement element, boolean isLast) {
@@ -50,6 +51,7 @@ public class Job {
         return finishedList;
     }
 
+    //No need to be sync as only one thread is ever accessing at once
     public void setFinishedList(LinkedList<Item<Renderable>> list) {
         this.finishedList = list;
     }

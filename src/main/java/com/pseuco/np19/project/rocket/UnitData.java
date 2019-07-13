@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UnitData {
 
@@ -18,13 +19,13 @@ public class UnitData {
     private int segmentCount;
     private Map<Integer, Segment> segments;
     private List pages;
-    private boolean unableToBreak;
+    private AtomicBoolean unableToBreak;
 
 
     public UnitData(Configuration config, Printer printer) {
-        this.segments = new ConcurrentHashMap<Integer, Segment>();
+        this.segments = new ConcurrentHashMap<>();
         this.pages = Collections.synchronizedList(new LinkedList<Page>()); //Is that how it works
-        this.unableToBreak = false;
+        this.unableToBreak = new AtomicBoolean(false);
         this.config = config;
         this.printer = printer;
         this.segmentCount = 0;
@@ -49,24 +50,31 @@ public class UnitData {
         }
     }
 
+    //TODO why synced?
     public synchronized void addPages(List<Page> l) {
         //System.out.println("I am adding the pages");
         this.pages.addAll(l);
     }
 
-    public synchronized boolean isUnableToBreak() {
-        return this.unableToBreak;
+    public boolean isUnableToBreak() {
+        return this.unableToBreak.get();
     }
 
-    public synchronized void setUnableToBreak(boolean b) {
-        this.unableToBreak = b;
+    /**
+     * This sets the unableToBreak flag to true
+     * this will not be reversible
+     */
+    public void setUnableToBreak() {
+        this.unableToBreak.compareAndSet(false, true);
     }
 
+    //TODO maybe return something different (copy etc)
     public synchronized List getPages() {
         return pages;
     }
 
-    public synchronized Configuration getConfig() {
+    // No data race as config is final and is only being read
+    public Configuration getConfig() {
         return this.config;
     }
 

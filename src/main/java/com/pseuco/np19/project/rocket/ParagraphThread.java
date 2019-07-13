@@ -15,10 +15,10 @@ import java.util.concurrent.ExecutorService;
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class ParagraphThread implements Runnable, IBlockVisitor {
-    private final LinkedList<Item<Renderable>> items = new LinkedList<>();
-    private UnitData udata;
-    private Job job;
-    private ExecutorService executor;
+    private LinkedList<Item<Renderable>> items = new LinkedList<>();
+    private final UnitData udata;
+    private final Job job;
+    private final ExecutorService executor;
 
     public ParagraphThread(UnitData udata, Job job, ExecutorService executor) {
         this.udata = udata;
@@ -28,10 +28,8 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
 
     @Override
     public void run() {
-
         //call correct visit method
         job.getElement().accept(this);
-
         //write result back into job since it is finished after visit
         job.setFinishedList(this.items);
         //close this job again and exit.
@@ -52,7 +50,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
             udata.getConfig().getBlockFormatter().pushParagraph(this.items::add, lines);
         } catch (UnableToBreakException error) {
             System.err.println("Unable to break paragraph!");
-            udata.setUnableToBreak(true);
+            udata.setUnableToBreak();
         }
     }
 

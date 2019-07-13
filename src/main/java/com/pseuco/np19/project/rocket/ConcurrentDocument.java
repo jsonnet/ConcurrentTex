@@ -8,6 +8,7 @@ import com.pseuco.np19.project.slug.tree.block.ForcedPageBreak;
 import com.pseuco.np19.project.slug.tree.block.Paragraph;
 
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConcurrentDocument implements DocumentBuilder {
 
@@ -15,13 +16,13 @@ public class ConcurrentDocument implements DocumentBuilder {
     private int paragraphCounter;
     private BlockElement lastBlockElement;
     private LinkedBlockingDeque<Job> jobs;
-    private boolean isFinished;
+    private AtomicBoolean isFinished;
 
 
     public ConcurrentDocument() {
         // Thread safe as long as you do not use ...All() operations
-        this.jobs = new LinkedBlockingDeque<Job>();
-        this.isFinished = false;
+        this.jobs = new LinkedBlockingDeque<>();
+        this.isFinished = new AtomicBoolean(false);
     }
 
     @Override
@@ -42,7 +43,7 @@ public class ConcurrentDocument implements DocumentBuilder {
         this.paragraphCounter++;
         //add last appended Paragraph to the queue since it should be done by now
         Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
-        jobs.add(newJob);
+        jobs.offerLast(newJob);
 
         //Create new paragraph object to return
         Paragraph paragraph = new Paragraph();
@@ -56,25 +57,25 @@ public class ConcurrentDocument implements DocumentBuilder {
     public void finish() {
         //Append last pageBreak at the end of whole document
         this.appendForcedPageBreak(null);
-        // FIXME does this one need a sync block? #datarace from below
-        this.isFinished = true;     //This flag is helpful for the ThreadPool
+        //TODO need to look further into atomicBoolean and others
+        this.isFinished.set(true);     //This flag is helpful for the ThreadPool
     }
 
     public boolean isJobsEmpty() {
-        return jobs.isEmpty();  //TODO: Check DataRace or not
+        return jobs.isEmpty();  //FIXME: Check DataRace probably problematic
     }
 
-    //TODO look into this data race, but most certainly is due to read-write
-    public synchronized boolean isFinished() {
-        return this.isFinished;
+    //No more data race due to atomic boolean
+    public boolean isFinished() {
+        return this.isFinished.get();
     }
 
     public Job getJob() {
-        // No DataRace due to concurrent data-structure
+        // No DataRace due to concurrent data-structure, but blocks?
         return jobs.poll();
     }
 
-    //TODO look into this data race, but most certainly is due to read-write
+    //TODO look into this data race, but most certainly is due to read-write, maybe use atomicInteger?
     public synchronized int getSegmentCounter() {
         return segmentCounter;
     }
