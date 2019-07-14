@@ -20,7 +20,6 @@ public class Segment {
     private final Printer printer;
     private final int id;
     private HashMap<Integer, List> items;
-    private int addCounter;
     private int expected = -1;
     private ExecutorService executor;
     private UnitData udata;
@@ -34,21 +33,20 @@ public class Segment {
         this.id = id;
     }
 
-
+    // Why should this be sync?
     public synchronized void add(int seqNmbr, List<Item<Renderable>> l, int expected) {
-
-        this.addCounter++;
+        // actual use of the method, to add the block elements to the segments
         this.items.put(seqNmbr, l);
 
-        //only set expected if it has not been set yet
+        // only set expected if it has not been set yet
+        //TODO maybe a good place for an AtomicInteger CAS method
         this.expected = (expected != -1) ? expected : this.expected;
 
-        if (this.expected == this.addCounter) {
-            System.out.println(id);
-            //Rendering is a job for the executer
+        // Render the pages of this segment if the segment is complete
+        if (this.expected == this.items.size()) {
+            //Rendering is a job for the executor
             executor.submit(() -> {
                 try {
-
                     //This works (also correct order!)
                     LinkedList<Item<Renderable>> itemList = new LinkedList<>();
                     for (List l1 : items.values()) {

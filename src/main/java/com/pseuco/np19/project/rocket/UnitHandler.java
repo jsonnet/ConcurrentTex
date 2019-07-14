@@ -44,6 +44,7 @@ public class UnitHandler extends Thread {
                 e.printStackTrace();
             }
         });
+        // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
 
         while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
@@ -56,21 +57,26 @@ public class UnitHandler extends Thread {
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
             executor.shutdownNow();
-            //FIXME the following while will break with this!
+            try {
+                this.unit.getPrinter().printErrorPage();
+                this.unit.getPrinter().finishDocument();
+            } catch (IOException e) {}
+            // do not do unnecessary work if a paragraph failed to typeset
+            return;
         }
 
-        while (udata.getSegmentCount() != document.getSegmentCounter()) {
+        while (udata.getFinishedSegmentSize() != document.getSegmentCounter()) {
             //System.out.println("not yet");
             try {
-                Thread.sleep(10);  //TODO: hier muss gewartet werden. Das hier ist nicht ordentlich und die Bedingung reicht nicht ganz aus
+                Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
             } catch (InterruptedException e) {
                 System.out.println("Handler waiting interrupted!");
                 e.printStackTrace();
                 break;
             }
         }
-        //FIXME: what if new render submit by a worker needs to be pushed?
-        // This will drop all new submits at this point
+
+        // This will drop all new submits at this point, but all possible should be done by now
         executor.shutdown();
         try {
             executor.awaitTermination(10, TimeUnit.MINUTES);
@@ -80,7 +86,6 @@ public class UnitHandler extends Thread {
 
         //Now that every task is done, print all pages that have been rendered
         try {
-            //FIXME with alice I noticed sometimes it does not print the last segment!! Maybe because of shutdown even its not finished yet
             this.unit.getPrinter().printPages(udata.getPages());
             this.unit.getPrinter().finishDocument();
         } catch (IOException e) {
