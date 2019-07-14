@@ -18,20 +18,20 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class Segment {
     private final Configuration config;
     private final Printer printer;
-    private int id;
-    private HashMap<Integer, List> items; //needs to be map since I need to store in sequence
+    private final int id;
+    private HashMap<Integer, List> items;
     private int addCounter;
     private int expected = -1;
     private ExecutorService executor;
     private UnitData udata;
-    private boolean isFinished = false;
 
-    public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata) {
-        this.items = new HashMap<Integer, List>();
+    public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata, int id) {
+        this.items = new HashMap<>(); //TODO why not concurrent?
         this.printer = printer;
         this.config = config;
         this.executor = executor;
         this.udata = udata;
+        this.id = id;
     }
 
 
@@ -41,31 +41,27 @@ public class Segment {
         this.items.put(seqNmbr, l);
 
         //only set expected if it has not been set yet
-        this.expected = expected != -1 ? expected : this.expected;
+        this.expected = (expected != -1) ? expected : this.expected;
 
         if (this.expected == this.addCounter) {
+            System.out.println(id);
             //Rendering is a job for the executer
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    //System.out.println("I am rendering");
-                    try {
+            executor.submit(() -> {
+                try {
 
-                        LinkedList<Item<Renderable>> itemList = new LinkedList<Item<Renderable>>(); //FIXME: Might not work due to incorrect order adding
-                        for (List l : items.values()) {
-                            itemList.addAll(l);
-                        }
-
-                        List<Piece<Renderable>> pieces = breakIntoPieces(config.getBlockParameters(), itemList, config.getBlockTolerances(),
-                                config.getGeometry().getTextHeight());
-
-                        //System.out.println("genau");
-                        List<Page> renderPages = printer.renderPages(pieces);
-                        udata.addPages(renderPages);
-                        isFinished = true;
-                    } catch (UnableToBreakException e) {
-                        System.out.println("Could not render. HELP");
+                    //This works (also correct order!)
+                    LinkedList<Item<Renderable>> itemList = new LinkedList<>();
+                    for (List l1 : items.values()) {
+                        itemList.addAll(l1);
                     }
+
+                    List<Piece<Renderable>> pieces = breakIntoPieces(config.getBlockParameters(), itemList, config.getBlockTolerances(),
+                            config.getGeometry().getTextHeight());
+
+                    List<Page> renderPages = printer.renderPages(pieces);
+                    udata.addPages(id, renderPages);
+                } catch (UnableToBreakException e) {
+                    System.out.println("Could not render. HELP");
                 }
             });
         }

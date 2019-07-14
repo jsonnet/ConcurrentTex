@@ -18,13 +18,13 @@ public class UnitData {
     private final Printer printer;
     private int segmentCount;
     private Map<Integer, Segment> segments;
-    private List pages;
+    private Map<Integer, List> pages;
     private AtomicBoolean unableToBreak;
 
 
     public UnitData(Configuration config, Printer printer) {
         this.segments = new ConcurrentHashMap<>();
-        this.pages = Collections.synchronizedList(new LinkedList<Page>()); //Is that how it works
+        this.pages = new ConcurrentHashMap<>();
         this.unableToBreak = new AtomicBoolean(false);
         this.config = config;
         this.printer = printer;
@@ -33,12 +33,13 @@ public class UnitData {
 
     /**
      * This will take the result and add it to the correct position in the segments map
+     * TODO maybe this should be moved to the thread itself and only segments is written here
      */
     public synchronized void closeJob(Job job, ExecutorService executor) {
         int segID = job.getSegmentID();
         //Check if segment exists, if not create new Segment
         if (segments.get(segID) == null) {
-            segments.put(segID, new Segment(executor, config, printer, this));
+            segments.put(segID, new Segment(executor, config, printer, this, segID));
             segmentCount++;
         }
 
@@ -50,10 +51,8 @@ public class UnitData {
         }
     }
 
-    //TODO why synced?
-    public synchronized void addPages(List<Page> l) {
-        //System.out.println("I am adding the pages");
-        this.pages.addAll(l);
+    public void addPages(int seq, List<Page> l) {
+        this.pages.put(seq, l);
     }
 
     public boolean isUnableToBreak() {
@@ -69,8 +68,12 @@ public class UnitData {
     }
 
     //TODO maybe return something different (copy etc)
-    public synchronized List getPages() {
-        return pages;
+    public List getPages() {
+        List<Page> pageList = new LinkedList<>();
+        for (List p : pages.values()) {
+            pageList.addAll(p);
+        }
+        return pageList;
     }
 
     // No data race as config is final and is only being read

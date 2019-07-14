@@ -33,7 +33,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
         //write result back into job since it is finished after visit
         job.setFinishedList(this.items);
         //close this job again and exit.
-        udata.closeJob(job, executor);
+        udata.closeJob(job, executor); //FIXME may due a change! see method description
     }
 
     @Override

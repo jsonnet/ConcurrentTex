@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ConcurrentDocument implements DocumentBuilder {
 
     private int segmentCounter;
-    private int paragraphCounter;
+    private int paragraphCounter = -1;
     private BlockElement lastBlockElement;
     private LinkedBlockingDeque<Job> jobs;
     private AtomicBoolean isFinished;
@@ -27,23 +27,36 @@ public class ConcurrentDocument implements DocumentBuilder {
 
     @Override
     public void appendForcedPageBreak(Position position) {
+        //add last appended Paragraph to the queue since it should be done by now
+        if (lastBlockElement != null) {
+            this.paragraphCounter++;
+            Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
+            jobs.offerLast(newJob);
+            lastBlockElement = null;
+        }
+
         this.paragraphCounter++;
+        //Create new paragraph aka the ForcedPageBreak, but this time can be done directly without needing to wait
         Job endJob = new Job(this.segmentCounter, this.paragraphCounter, new ForcedPageBreak(), true);
         jobs.add(endJob);
 
         //Since this marks the end of segment reset the counter and keep track that we are working
         //on the next segment
         //FIXME segCounter datarace?
-        this.segmentCounter++;
-        this.paragraphCounter = 0;
+        synchronized (this) {
+            this.segmentCounter++;
+        }
+        this.paragraphCounter = -1;
     }
 
     @Override
     public ParagraphBuilder appendParagraph(Position position) {
         this.paragraphCounter++;
-        //add last appended Paragraph to the queue since it should be done by now
-        Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
-        jobs.offerLast(newJob);
+        //add last appended Paragraph to the queue since it should be done by now, but remember the first it's called no last elem exists or after a page break!
+        if (lastBlockElement != null) {
+            Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
+            jobs.offerLast(newJob);
+        }
 
         //Create new paragraph object to return
         Paragraph paragraph = new Paragraph();
@@ -71,7 +84,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     }
 
     public Job getJob() {
-        // No DataRace due to concurrent data-structure, but blocks?
+        // No DataRace due to concurrent data-structure
         return jobs.poll();
     }
 

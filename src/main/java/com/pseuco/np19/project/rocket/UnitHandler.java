@@ -48,6 +48,7 @@ public class UnitHandler extends Thread {
 
         while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
             //System.out.println("hallo ich tue etwas");
+            //FIXME maybe need to check for getJob returning null!
             executor.submit(new ParagraphThread(udata, document.getJob(), executor));
         }
 
@@ -55,6 +56,7 @@ public class UnitHandler extends Thread {
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
             executor.shutdownNow();
+            //FIXME the following while will break with this!
         }
 
         while (udata.getSegmentCount() != document.getSegmentCounter()) {
@@ -78,7 +80,9 @@ public class UnitHandler extends Thread {
 
         //Now that every task is done, print all pages that have been rendered
         try {
+            //FIXME with alice I noticed sometimes it does not print the last segment!! Maybe because of shutdown even its not finished yet
             this.unit.getPrinter().printPages(udata.getPages());
+            this.unit.getPrinter().finishDocument();
         } catch (IOException e) {
             e.printStackTrace();
         }
