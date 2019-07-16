@@ -34,12 +34,11 @@ public class UnitHandler extends Thread {
         //create an empty document
         this.document = new ConcurrentDocument();
 
-        //TODO is this right ?
         parser = new Parser(unit.getInputReader(), document);
     }
 
     @Override
-    public synchronized void run() { //TODO remove sync!
+    public void run() {
         //Start a Thread to parse...
         Thread parserThread = new Thread(() -> {
             try {
@@ -57,6 +56,16 @@ public class UnitHandler extends Thread {
         }
         //Parser has finished
 
+
+        while ((udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
+
+            //Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
+            Thread.yield();
+
+        }
+
+        //Moved this down here because while loop now stops if unableToBreak and if it was before even skipts the while...
+        //So this is the correct time to handle it!
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
             //DONE we need to also stop the Parser via .abort() !
@@ -65,21 +74,11 @@ public class UnitHandler extends Thread {
             try {
                 this.unit.getPrinter().printErrorPage();
                 this.unit.getPrinter().finishDocument();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                System.out.println("Could not print Error page");
+            }
             // do not do unnecessary work if a paragraph failed to typeset
             return;
-        }
-
-        // FIXME check if executor is finished eg waitlist is emtpy / exec has no jobs
-        // FIXME replace document.getSegmentCounter() by size of segements map in udata!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        while (udata.getFinishedSegmentSize() != document.getSegmentCounter()) {
-            try {
-                Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
-            } catch (InterruptedException e) {
-                System.out.println("Handler waiting interrupted!");
-                e.printStackTrace();
-                break;
-            }
         }
 
         // This will drop all new submits at this point, but all possible should be done by now

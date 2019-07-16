@@ -42,10 +42,8 @@ public class ConcurrentDocument implements DocumentBuilder {
 
         //Since this marks the end of segment reset the counter and keep track that we are working
         //on the next segment
-        //FIXME segCounter datarace?
-        synchronized (this) {
-            this.segmentCounter++;
-        }
+        this.segmentCounter++;
+
         this.paragraphCounter = -1;
     }
 
@@ -88,8 +86,8 @@ public class ConcurrentDocument implements DocumentBuilder {
         return jobs.poll();
     }
 
-    //TODO look into this data race, but most certainly is due to read-write, maybe use atomicInteger?
-    public synchronized int getSegmentCounter() {
+    //gets called after document is finished and only by one thread: so no synchronized needed
+    public int getSegmentCounter() {
         return segmentCounter;
     }
 }

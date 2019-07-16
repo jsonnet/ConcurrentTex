@@ -22,7 +22,6 @@ public class Rocket {
             }
 
             UnitHandler[] unitThreads = new UnitHandler[units.size()];
-
             // For every Unit start a new Thread that will process it
             for (int i = 0; i < units.size(); i++) {
                 unitThreads[i] = new UnitHandler(units.get(i));
