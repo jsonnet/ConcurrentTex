@@ -67,11 +67,13 @@ public class UnitHandler extends Thread {
 
         while ((udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
 
-            try {
-                Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
-            } catch (InterruptedException e) {
+            synchronized (udata){
+                try {
+                    udata.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            //Thread.yield();
 
         }
 

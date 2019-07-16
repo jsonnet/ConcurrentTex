@@ -51,6 +51,9 @@ public class UnitData {
 
     public void addPages(int seq, List<Page> l) {
         this.pages.put(seq, l);
+        synchronized (this){
+            this.notify();
+        }
     }
 
     public int getFinishedSegmentSize(){
