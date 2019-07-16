@@ -29,7 +29,7 @@ public class UnitHandler extends Thread {
         // Creates ThreadPool for every Unit with max of all available logical cores
         //this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         int cores = Runtime.getRuntime().availableProcessors(); //help
-        this.executor = cores <= 2 ? Executors.newFixedThreadPool(cores) : Executors.newCachedThreadPool();
+        this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newCachedThreadPool();
         this.unit = unit;
         this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter());
 
@@ -51,6 +51,12 @@ public class UnitHandler extends Thread {
         });
         // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
+        if (Runtime.getRuntime().availableProcessors() == 1) {
+            try {
+                parserThread.join();
+            } catch (InterruptedException e) {
+            }
+        }
 
         while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
             //FIXME maybe need to check for getJob returning null!
@@ -61,8 +67,8 @@ public class UnitHandler extends Thread {
 
         while ((udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
 
-            //Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
-            Thread.yield();
+            Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
+            //Thread.yield();
 
         }
 
