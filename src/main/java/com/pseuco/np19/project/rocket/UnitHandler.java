@@ -51,7 +51,7 @@ public class UnitHandler extends Thread {
         });
         // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
-        if (Runtime.getRuntime().availableProcessors() == 1) {
+        if (Runtime.getRuntime().availableProcessors() == 0) {
             try {
                 parserThread.join();
             } catch (InterruptedException e) {
