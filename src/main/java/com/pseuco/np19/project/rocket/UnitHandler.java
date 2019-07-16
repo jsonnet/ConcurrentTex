@@ -22,6 +22,7 @@ public class UnitHandler extends Thread {
     private Unit unit;
     private UnitData udata;
     private ConcurrentDocument document;
+    private Parser parser;
 
 
     public UnitHandler(Unit unit) {
@@ -32,14 +33,17 @@ public class UnitHandler extends Thread {
 
         //create an empty document
         this.document = new ConcurrentDocument();
+
+        //TODO is this right ?
+        parser = new Parser(unit.getInputReader(), document);
     }
 
     @Override
-    public synchronized void run() {
+    public synchronized void run() { //TODO remove sync!
         //Start a Thread to parse...
         Thread parserThread = new Thread(() -> {
             try {
-                Parser.parse(unit.getInputReader(), document);
+                parser.buildDocument();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,14 +52,15 @@ public class UnitHandler extends Thread {
         parserThread.start();
 
         while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
-            //System.out.println("hallo ich tue etwas");
             //FIXME maybe need to check for getJob returning null!
             executor.submit(new ParagraphThread(udata, document.getJob(), executor));
         }
+        //Parser has finished
 
-        //System.out.println("Ja lol ey");
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
+            //DONE we need to also stop the Parser via .abort() !
+            parser.abort();
             executor.shutdownNow();
             try {
                 this.unit.getPrinter().printErrorPage();
@@ -65,8 +70,9 @@ public class UnitHandler extends Thread {
             return;
         }
 
+        // FIXME check if executor is finished eg waitlist is emtpy / exec has no jobs
+        // FIXME replace document.getSegmentCounter() by size of segements map in udata!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         while (udata.getFinishedSegmentSize() != document.getSegmentCounter()) {
-            //System.out.println("not yet");
             try {
                 Thread.sleep(10);  //TODO maybe we find a better way, but for now it's good enough
             } catch (InterruptedException e) {
