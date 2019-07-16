@@ -27,7 +27,8 @@ public class UnitHandler extends Thread {
 
     public UnitHandler(Unit unit) {
         // Creates ThreadPool for every Unit with max of all available logical cores
-        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        //this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executor = Executors.newCachedThreadPool();
         this.unit = unit;
         this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter());
 
