@@ -29,6 +29,7 @@ public class Breaker<T> {
     public static <T> List<Piece<T>> breakIntoPieces(Parameters parameters, List<Item<T>> items, List<Double> tolerances, double pieceSize) throws UnableToBreakException {
         final Breaker<T> breaker = parameters.createBreaker(pieceSize, tolerances);
         breaker.pushAll(items);
+
         if (!breaker.hasPieces()) {
             throw new UnableToBreakException();
         }
