@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UnitData {
@@ -17,7 +18,7 @@ public class UnitData {
     private final Configuration config;
     private final Printer printer;
     private final ExecutorService executor;
-    private final ReentrantLock printLock = new ReentrantLock();
+    private final Lock printLock = new ReentrantLock();
     private Map<Integer, Segment> segments;
     private Map<Integer, List<Page>> pages;
     private AtomicBoolean unableToBreak;
@@ -39,11 +40,15 @@ public class UnitData {
      * normally a data method should not do any real processing
      * sync has to be here -> Lukas
      */
-    public synchronized void closeJob(Job job, ExecutorService executor) {
+    public void closeJob(Job job, ExecutorService executor) {
         int segID = job.getSegmentID();
-        //Check if segment exists, if not create new Segment
-        if (segments.get(segID) == null) {
-            segments.put(segID, new Segment(executor, config, printer, this, segID));
+
+        //TODO would be nice to only lock if necessary, maybe look into why needed anyways with get
+        synchronized (segments) {
+            //Check if segment exists, if not create new Segment
+            if (segments.get(segID) == null) {
+                segments.put(segID, new Segment(executor, config, printer, this, segID));
+            }
         }
 
         //Choose action based on the fact that this job was the last job for Segment or not
