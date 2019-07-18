@@ -18,18 +18,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class UnitHandler extends Thread {
 
-    private ExecutorService executor;
-    private Unit unit;
-    private UnitData udata;
-    private ConcurrentDocument document;
-    private Parser parser;
+    private final ExecutorService executor;
+    private final Unit unit;
+    private final UnitData udata;
+    private final ConcurrentDocument document;
+    private final Parser parser;
 
 
     public UnitHandler(Unit unit) {
         // Creates ThreadPool for every Unit with max of all available logical cores
-        //this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        int cores = Runtime.getRuntime().availableProcessors(); //help
-        this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newCachedThreadPool();
+        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        //int cores = Runtime.getRuntime().availableProcessors(); //help
+        //this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newCachedThreadPool();
+        //this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newFixedThreadPool(cores-1);
+
         this.unit = unit;
         this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter());
 
@@ -51,40 +53,22 @@ public class UnitHandler extends Thread {
         });
         // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
-        if (Runtime.getRuntime().availableProcessors() == 0) {
-            try {
-                parserThread.join();
-            } catch (InterruptedException e) {
-            }
-        }
-
-        //TODO uncomment to revert document handling submits and Comment out lines in document
-        /*
-        while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
-            //FIXME maybe need to check for getJob returning null!
-            executor.submit(new ParagraphThread(udata, document.getJob(), executor));
-        }
-        //Parser has finished
-        */
-
 
         while ((!document.isFinished() && !udata.isUnableToBreak()) || (udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
-           
-            synchronized (udata){
+
+            synchronized (udata) {
                 try {
                     udata.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-
         }
 
         //Moved this down here because while loop now stops if unableToBreak and if it was before even skipts the while...
         //So this is the correct time to handle it!
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
-            //DONE we need to also stop the Parser via .abort() !
             parser.abort();
             executor.shutdownNow();
             try {
@@ -99,11 +83,12 @@ public class UnitHandler extends Thread {
 
         // This will drop all new submits at this point, but all possible should be done by now
         executor.shutdown();
-        try {
+        //TODO now more wait?!
+        /*try {
             executor.awaitTermination(10, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
         //Now that every task is done, print all pages that have been rendered
         try {

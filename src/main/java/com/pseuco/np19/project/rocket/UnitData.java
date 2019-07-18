@@ -4,7 +4,6 @@ import com.pseuco.np19.project.launcher.Configuration;
 import com.pseuco.np19.project.launcher.printer.Page;
 import com.pseuco.np19.project.launcher.printer.Printer;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,8 @@ public class UnitData {
     /**
      * This will take the result and add it to the correct position in the segments map
      * TODO maybe this should be moved to the thread itself and only segments is written here
-     *  normally a data method should not do any real processing
+     * normally a data method should not do any real processing
+     * FIXME why is this sync again???
      */
     public synchronized void closeJob(Job job, ExecutorService executor) {
         int segID = job.getSegmentID();
@@ -51,12 +51,13 @@ public class UnitData {
 
     public void addPages(int seq, List<Page> l) {
         this.pages.put(seq, l);
-        synchronized (this){
+        //TODO start printing!
+        synchronized (this) {
             this.notify();
         }
     }
 
-    public int getFinishedSegmentSize(){
+    public int getFinishedSegmentSize() {
         return this.pages.keySet().size();
     }
 
@@ -84,5 +85,4 @@ public class UnitData {
     public Configuration getConfig() {
         return this.config;
     }
-
 }

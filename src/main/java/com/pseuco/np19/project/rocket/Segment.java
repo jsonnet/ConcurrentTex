@@ -19,7 +19,7 @@ public class Segment {
     private final Configuration config;
     private final Printer printer;
     private final int id;
-    private HashMap<Integer, List> items;
+    private HashMap<Integer, List<Item<Renderable>>> items;
     private int expected = -1;
     private ExecutorService executor;
     private UnitData udata;
