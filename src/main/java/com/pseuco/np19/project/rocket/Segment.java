@@ -22,7 +22,7 @@ public class Segment {
     private final Printer printer;
     private final int id;
     private ConcurrentHashMap<Integer, List<Item<Renderable>>> items;
-    private AtomicInteger expected;
+    private AtomicInteger expected = new AtomicInteger(-1);
     private ExecutorService executor;
     private UnitData udata;
 
@@ -33,7 +33,6 @@ public class Segment {
         this.executor = executor;
         this.udata = udata;
         this.id = id;
-        this.expected.set(-1);
     }
 
     // Why should this be sync?
