@@ -67,8 +67,9 @@ public class UnitHandler extends Thread {
         //Parser has finished
         */
 
-        while ((udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
 
+        while ((!document.isFinished() && !udata.isUnableToBreak()) || (udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
+           
             synchronized (udata){
                 try {
                     udata.wait();
