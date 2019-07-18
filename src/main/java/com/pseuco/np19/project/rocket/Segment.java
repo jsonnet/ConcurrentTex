@@ -11,7 +11,9 @@ import com.pseuco.np19.project.launcher.render.Renderable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
@@ -19,31 +21,32 @@ public class Segment {
     private final Configuration config;
     private final Printer printer;
     private final int id;
-    private HashMap<Integer, List<Item<Renderable>>> items;
-    private int expected = -1;
+    private ConcurrentHashMap<Integer, List<Item<Renderable>>> items;
+    private AtomicInteger expected;
     private ExecutorService executor;
     private UnitData udata;
 
     public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata, int id) {
-        this.items = new HashMap<>(); //TODO why not concurrent?
+        this.items = new ConcurrentHashMap<>();
         this.printer = printer;
         this.config = config;
         this.executor = executor;
         this.udata = udata;
         this.id = id;
+        this.expected.set(-1);
     }
 
     // Why should this be sync?
-    public synchronized void add(int seqNmbr, List<Item<Renderable>> l, int expected) {
+    public void add(int seqNmbr, List<Item<Renderable>> l, int expected) {
         // actual use of the method, to add the block elements to the segments
         this.items.put(seqNmbr, l);
 
         // only set expected if it has not been set yet
-        //TODO maybe a good place for an AtomicInteger CAS method
-        this.expected = (expected != -1) ? expected : this.expected;
+        if(expected != -1) this.expected.compareAndSet(-1, expected);
+        //this.expected = (expected != -1) ? expected : this.expected;
 
         // Render the pages of this segment if the segment is complete
-        if (this.expected == this.items.size()) {
+        if (this.expected.get() == this.items.size()) {
             //Rendering is a job for the executor
             executor.submit(() -> {
                 try {
