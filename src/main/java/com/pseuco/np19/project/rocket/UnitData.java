@@ -92,6 +92,9 @@ public class UnitData {
      */
     public void setUnableToBreak() {
         this.unableToBreak.compareAndSet(false, true);
+        synchronized (this) {
+            this.notify();
+        }
     }
 
     // No data race as config is final and is only being read
