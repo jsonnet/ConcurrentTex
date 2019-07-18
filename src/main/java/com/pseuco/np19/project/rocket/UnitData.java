@@ -4,28 +4,33 @@ import com.pseuco.np19.project.launcher.Configuration;
 import com.pseuco.np19.project.launcher.printer.Page;
 import com.pseuco.np19.project.launcher.printer.Printer;
 
-import java.util.LinkedList;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class UnitData {
 
     private final Configuration config;
     private final Printer printer;
+    private final ExecutorService executor;
+    private final ReentrantLock lock = new ReentrantLock();
     private Map<Integer, Segment> segments;
-    private Map<Integer, List> pages;
+    private Map<Integer, List<Page>> pages;
     private AtomicBoolean unableToBreak;
+    private int printedPages = 0, printQueuePages = 0;
 
 
-    public UnitData(Configuration config, Printer printer) {
+    public UnitData(Configuration config, Printer printer, ExecutorService executor) {
         this.segments = new ConcurrentHashMap<>();
         this.pages = new ConcurrentHashMap<>();
         this.unableToBreak = new AtomicBoolean(false);
         this.config = config;
         this.printer = printer;
+        this.executor = executor;
     }
 
     /**
@@ -49,16 +54,32 @@ public class UnitData {
         }
     }
 
-    public void addPages(int seq, List<Page> l) {
+    public synchronized void addPages(int seq, List<Page> l) {
         this.pages.put(seq, l);
-        //TODO start printing!
-        synchronized (this) {
-            this.notify();
+
+        // printQueuePages data race if not sync!
+        while (pages.containsKey(printQueuePages)) {
+            printQueuePages++;
+            executor.submit(() -> {
+                lock.lock();
+                try {
+                    printer.printPages(pages.get(printedPages));
+                    printedPages++;
+                    // Only for short time lock on udata
+                    synchronized (this) {
+                        this.notify();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    lock.unlock();
+                }
+            });
         }
     }
 
-    public int getFinishedSegmentSize() {
-        return this.pages.keySet().size();
+    public int getPrintedPages() {
+        return this.printedPages;
     }
 
     public boolean isUnableToBreak() {
@@ -71,14 +92,6 @@ public class UnitData {
      */
     public void setUnableToBreak() {
         this.unableToBreak.compareAndSet(false, true);
-    }
-
-    public List<Page> getPages() {
-        List<Page> pageList = new LinkedList<>();
-        for (List p : pages.values()) {
-            pageList.addAll(p);
-        }
-        return pageList;
     }
 
     // No data race as config is final and is only being read

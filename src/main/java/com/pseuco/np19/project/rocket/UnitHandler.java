@@ -6,7 +6,6 @@ import com.pseuco.np19.project.launcher.parser.Parser;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class will create a ThreadPool and submit the tasks to the threads
@@ -33,7 +32,7 @@ public class UnitHandler extends Thread {
         //this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newFixedThreadPool(cores-1);
 
         this.unit = unit;
-        this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter());
+        this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter(), executor);
 
         //create an empty document
         this.document = new ConcurrentDocument(udata, executor);
@@ -54,8 +53,7 @@ public class UnitHandler extends Thread {
         // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
 
-        while ((!document.isFinished() && !udata.isUnableToBreak()) || (udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
-
+        while ((!document.isFinished() && !udata.isUnableToBreak()) || (udata.getPrintedPages() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
             synchronized (udata) {
                 try {
                     udata.wait();
@@ -83,16 +81,9 @@ public class UnitHandler extends Thread {
 
         // This will drop all new submits at this point, but all possible should be done by now
         executor.shutdown();
-        //TODO now more wait?!
-        /*try {
-            executor.awaitTermination(10, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
 
-        //Now that every task is done, print all pages that have been rendered
+        //Now that every task is done, all pages have been printed
         try {
-            this.unit.getPrinter().printPages(udata.getPages());
             this.unit.getPrinter().finishDocument();
         } catch (IOException e) {
             e.printStackTrace();
