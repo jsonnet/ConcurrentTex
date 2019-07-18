@@ -27,16 +27,11 @@ public class UnitHandler extends Thread {
     public UnitHandler(Unit unit) {
         // Creates ThreadPool for every Unit with max of all available logical cores
         this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        //int cores = Runtime.getRuntime().availableProcessors(); //help
-        //this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newCachedThreadPool();
-        //this.executor = (cores == 1) ? Executors.newFixedThreadPool(cores) : Executors.newFixedThreadPool(cores-1);
-
         this.unit = unit;
         this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter(), executor);
 
         //create an empty document
         this.document = new ConcurrentDocument(udata, executor);
-
         parser = new Parser(unit.getInputReader(), document);
     }
 

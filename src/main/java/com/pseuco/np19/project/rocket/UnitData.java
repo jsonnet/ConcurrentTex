@@ -17,7 +17,7 @@ public class UnitData {
     private final Configuration config;
     private final Printer printer;
     private final ExecutorService executor;
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock printLock = new ReentrantLock();
     private Map<Integer, Segment> segments;
     private Map<Integer, List<Page>> pages;
     private AtomicBoolean unableToBreak;
@@ -37,7 +37,7 @@ public class UnitData {
      * This will take the result and add it to the correct position in the segments map
      * TODO maybe this should be moved to the thread itself and only segments is written here
      * normally a data method should not do any real processing
-     * FIXME why is this sync again???
+     * sync has to be here -> Lukas
      */
     public synchronized void closeJob(Job job, ExecutorService executor) {
         int segID = job.getSegmentID();
@@ -61,18 +61,18 @@ public class UnitData {
         while (pages.containsKey(printQueuePages)) {
             printQueuePages++;
             executor.submit(() -> {
-                lock.lock();
+                printLock.lock();
                 try {
                     printer.printPages(pages.get(printedPages));
                     printedPages++;
-                    // Only for short time lock on udata
+                    // Only for short time printLock on udata
                     synchronized (this) {
                         this.notify();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    lock.unlock();
+                    printLock.unlock();
                 }
             });
         }
