@@ -34,7 +34,7 @@ public class UnitHandler extends Thread {
         this.udata = new UnitData(unit.getConfiguration(), unit.getPrinter());
 
         //create an empty document
-        this.document = new ConcurrentDocument();
+        this.document = new ConcurrentDocument(udata, executor);
 
         parser = new Parser(unit.getInputReader(), document);
     }
@@ -58,12 +58,14 @@ public class UnitHandler extends Thread {
             }
         }
 
+        //TODO uncomment to revert document handling submits and Comment out lines in document
+        /*
         while (!(document.isFinished() && document.isJobsEmpty()) && !udata.isUnableToBreak()) {
             //FIXME maybe need to check for getJob returning null!
             executor.submit(new ParagraphThread(udata, document.getJob(), executor));
         }
         //Parser has finished
-
+        */
 
         while ((udata.getFinishedSegmentSize() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
 
