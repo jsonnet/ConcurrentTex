@@ -30,6 +30,7 @@ task runSlug(type: JavaExec) {
 task jarRocket(type: Jar) {
     archiveFileName = 'rocket.jar'
     destinationDirectory = file("$rootDir/out")
+    compileJava.options.encoding = 'UTF-8'
     manifest {
         attributes('Main-Class': 'com.pseuco.np19.project.rocket.Rocket')
     }
@@ -42,6 +43,7 @@ task jarRocket(type: Jar) {
 task jarSlug(type: Jar) {
     archiveFileName = 'slug.jar'
     destinationDirectory = file("$rootDir/out")
+    compileJava.options.encoding = 'UTF-8'
     manifest {
         attributes('Main-Class': 'com.pseuco.np19.project.slug.Slug')
     }

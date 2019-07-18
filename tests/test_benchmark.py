@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 from sidekick import tester
 from sidekick.runner import Handle, Runner
 
@@ -16,6 +18,8 @@ spirit case and a gas-o-gene in the corner. Then he stood be-fore the fire
 and looked me over in his sin-gu-lar in-tro-spect-ive fash-ion.
 '''.strip() * 50
 
+HASH = '8e62798e2f857491a3e54cdb511de48ae8100a01'
+
 
 @tester.add_configuration('slow')
 async def test_benchmark(runner: Runner, handle: Handle):
@@ -26,5 +30,6 @@ async def test_benchmark(runner: Runner, handle: Handle):
         handle.end_of_segment()
     handle.eof()
 
-    async for _ in handle.iter_pages():
-        pass
+    assert hashlib.sha1(await handle.drain()).hexdigest(), (
+        'sha1 mismatch: incorrect result'
+    )

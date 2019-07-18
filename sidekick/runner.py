@@ -99,8 +99,8 @@ class Handle:
         if self.connected.is_set():
             await self.closed.wait()
 
-    async def drain(self):
-        await self.reader.read()
+    async def drain(self, timeout: float = 200):
+        return await asyncio.wait_for(self.reader.read(), timeout=timeout)
 
 
 Program = List[Union[str, pathlib.Path]]
@@ -111,6 +111,8 @@ class Runner:
     program: Program
 
     configurations: List[pathlib.Path] = field(default_factory=list)
+
+    capture_output: bool = False
 
     affinity: Tuple[int] = tuple(range(os.cpu_count()))
 
@@ -125,8 +127,8 @@ class Runner:
             *(handle.connected.wait() for handle in self.handles)
         ), timeout=timeout)
 
-    async def wait_for_termination(self, timeout: float = 300):
-        await asyncio.wait_for(self.process.wait(), timeout)
+    async def wait_for_termination(self, timeout: float = 300) -> int:
+        return await asyncio.wait_for(self.process.wait(), timeout)
 
     async def __aenter__(self):
         assert self.process is None and self.handles is None
@@ -136,10 +138,14 @@ class Runner:
             handle = Handle(configuration)
             cmd.extend((configuration, 'socket', await handle.start()))
             self.handles.append(handle)
-        self.process = await subprocess.create_subprocess_exec(
-            *map(str, cmd),
-            #stderr=subprocess.PIPE, stdout=subprocess.PIPE
-        )
+        if self.capture_output:
+            self.process = await subprocess.create_subprocess_exec(
+                *map(str, cmd), stderr=subprocess.PIPE, stdout=subprocess.PIPE
+            )
+        else:
+            self.process = await subprocess.create_subprocess_exec(
+                *map(str, cmd)
+            )
         if psutil is not None:
             psutil.Process(self.process.pid).cpu_affinity(self.affinity)
         self.running.set()

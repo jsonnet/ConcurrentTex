@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from typing import List
 
-import argparse
 import asyncio
 import importlib.util
 import pathlib
@@ -34,6 +33,10 @@ def add_configuration(name: str):
     return decorator
 
 
+def get_configuration(name: str):
+    return config_directory / f'{name}.json'
+
+
 def may_fail(message: str):
     def decorator(function):
         function.__test_may_fail = message
@@ -51,16 +54,17 @@ async def run_with_runner(program, member):
         await asyncio.sleep(STARTUP_DELAY)
         start = time.monotonic()
         await member(runner, *runner.handles)
-    print(time.monotonic() - start)
+    print('Duration:', time.monotonic() - start)
 
 
 async def expect_pages(handle: Handle, pages: List[Page], *, timeout: float = 200):
     number = 0
     async for page in handle.iter_pages(timeout):
-        assert page == pages[number]
+        assert page == pages[number], f'mismatch on page {number}'
         if number == len(pages) - 1:
             return
         number += 1
+    raise AssertionError(f'expected {len(pages)} but got {number}')
 
 
 def load_the_end():
@@ -115,7 +119,7 @@ def main(arguments):
                             print('Timeout!')
                     except Exception as error:
                         traceback.print_exc()
-                        traceback.print_tb()
+                        traceback.print_tb(error.__traceback__)
                         if hasattr(member, '__test_may_fail'):
                             print('Failed!', member.__test_may_fail)
                         else:
