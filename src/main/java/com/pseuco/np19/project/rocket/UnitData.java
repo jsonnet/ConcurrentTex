@@ -36,8 +36,6 @@ public class UnitData {
 
     /**
      * This will take the result and add it to the correct position in the segments map
-     * TODO maybe this should be moved to the thread itself and only segments is written here
-     * normally a data method should not do any real processing
      * sync has to be here -> Lukas
      */
     public synchronized void closeJob(Job job, ExecutorService executor) {
@@ -57,17 +55,20 @@ public class UnitData {
     }
 
     public synchronized void addPages(int seq, List<Page> l) {
+        // Add the pages to the correct position in the map
         this.pages.put(seq, l);
 
-        // printQueuePages data race if not sync!
+        // Submit all possible print jobs as the correct order is not given at this point we need to check
+        //TODO printQueuePages data race if not sync!
         while (pages.containsKey(printQueuePages)) {
             printQueuePages++;
             executor.submit(() -> {
+                // Here we lock the printer so no other thread can print (--> we are only printing here)
                 printLock.lock();
                 try {
                     printer.printPages(pages.get(printedPages));
                     printedPages++;
-                    // Only for short time printLock on udata
+                    // Only for short time lock on udata to notify UnitHandler
                     synchronized (this) {
                         this.notify();
                     }
@@ -93,6 +94,7 @@ public class UnitData {
      * this will not be reversible
      */
     public void setUnableToBreak() {
+        // this one needs to use CAS as multiple threads could set the flag at once
         this.unableToBreak.compareAndSet(false, true);
         synchronized (this) {
             this.notify();

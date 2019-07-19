@@ -10,6 +10,7 @@ public class Rocket {
 
     /**
      * This starts the algorithm by spawning threads for each unit
+     *
      * @param arguments config, input, output files
      */
     public static void main(String[] arguments) {

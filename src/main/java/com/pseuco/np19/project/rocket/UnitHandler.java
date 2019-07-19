@@ -37,7 +37,7 @@ public class UnitHandler extends Thread {
 
     @Override
     public void run() {
-        //Start a Thread to parse...
+        // build a thread to parse the unit
         Thread parserThread = new Thread(() -> {
             try {
                 parser.buildDocument();
@@ -48,6 +48,7 @@ public class UnitHandler extends Thread {
         // We are starting the parsing, but no need too join, as it signals with finish call!
         parserThread.start();
 
+        // Here we wait (i.e. let the thread idle and give it's CPU time to the threadpool) for the whole Unit to be worked and printed
         while ((!document.isFinished() && !udata.isUnableToBreak()) || (udata.getPrintedPages() != document.getSegmentCounter()) && !udata.isUnableToBreak()) {
             synchronized (udata) {
                 try {
@@ -58,8 +59,7 @@ public class UnitHandler extends Thread {
             }
         }
 
-        //Moved this down here because while loop now stops if unableToBreak and if it was before even skipts the while...
-        //So this is the correct time to handle it!
+        // If we encountered a problem above this handles the unableToBreak error by stopping every task and printing the error page
         if (udata.isUnableToBreak()) {
             System.out.println("unable to break. SHUTDOWN initialized!");
             parser.abort();
@@ -70,14 +70,14 @@ public class UnitHandler extends Thread {
             } catch (IOException e) {
                 System.out.println("Could not print Error page");
             }
-            // do not do unnecessary work if a paragraph failed to typeset
+            // here we end this unit
             return;
         }
 
-        // This will drop all new submits at this point, but all possible should be done by now
+        // This will drop all new submits at this point, but all possible are done by now! Just so the executor shutdowns all threads
         executor.shutdown();
 
-        //Now that every task is done, all pages have been printed
+        // Now with everything being done we can finish the document and sign off
         try {
             this.unit.getPrinter().finishDocument();
         } catch (IOException e) {

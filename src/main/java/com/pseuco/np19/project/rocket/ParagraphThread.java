@@ -15,10 +15,10 @@ import java.util.concurrent.ExecutorService;
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
 public class ParagraphThread implements Runnable, IBlockVisitor {
-    private LinkedList<Item<Renderable>> items = new LinkedList<>();
     private final UnitData udata;
     private final Job job;
     private final ExecutorService executor;
+    private LinkedList<Item<Renderable>> items = new LinkedList<>();
 
     public ParagraphThread(UnitData udata, Job job, ExecutorService executor) {
         this.udata = udata;
