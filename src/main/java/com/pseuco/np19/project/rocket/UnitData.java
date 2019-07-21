@@ -38,7 +38,7 @@ public class UnitData {
      * This will take the result and add it to the correct position in the segments map
      * sync has to be here -> Lukas
      */
-    public synchronized void closeJob(Job job, ExecutorService executor) {
+    public synchronized void closeJob(Job job) {
         int segID = job.getSegmentID();
 
         //Check if segment exists, if not create new Segment

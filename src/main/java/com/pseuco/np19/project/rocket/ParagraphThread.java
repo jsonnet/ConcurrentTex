@@ -17,13 +17,11 @@ import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 public class ParagraphThread implements Runnable, IBlockVisitor {
     private final UnitData udata;
     private final Job job;
-    private final ExecutorService executor;
     private final LinkedList<Item<Renderable>> items = new LinkedList<>();
 
-    public ParagraphThread(UnitData udata, Job job, ExecutorService executor) {
+    public ParagraphThread(UnitData udata, Job job) {
         this.udata = udata;
         this.job = job;
-        this.executor = executor;
     }
 
     @Override
@@ -33,7 +31,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
         //write result back into job since it is finished after visit
         job.setFinishedList(this.items);
         //close this job again and exit.
-        udata.closeJob(job, executor); //FIXME may due a change! see method description
+        udata.closeJob(job); //FIXME may due a change! see method description
     }
 
     @Override

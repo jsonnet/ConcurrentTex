@@ -31,14 +31,14 @@ public class ConcurrentDocument implements DocumentBuilder {
             this.paragraphCounter++;
             Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
             lastBlockElement = null;
-            executor.submit(new ParagraphThread(udata, newJob, executor));
+            executor.submit(new ParagraphThread(udata, newJob));
         }
 
         // Submit the end of a segment
         this.paragraphCounter++;
         // Create new paragraph aka the ForcedPageBreak, but this time can be done directly without needing to wait
         Job endJob = new Job(this.segmentCounter, this.paragraphCounter, new ForcedPageBreak(), true);
-        executor.submit(new ParagraphThread(udata, endJob, executor));
+        executor.submit(new ParagraphThread(udata, endJob));
 
         // Since this marks the end of segment reset the counter and keep track that we are working on the next segment
         this.segmentCounter++;
@@ -51,7 +51,7 @@ public class ConcurrentDocument implements DocumentBuilder {
         // add last appended Paragraph to the queue since it should be done by now, but remember first call or after a page break has no last_elem!
         if (lastBlockElement != null) {
             Job newJob = new Job(this.segmentCounter, this.paragraphCounter, this.lastBlockElement);
-            executor.submit(new ParagraphThread(udata, newJob, executor));
+            executor.submit(new ParagraphThread(udata, newJob));
         }
 
         // Create new paragraph object to return
