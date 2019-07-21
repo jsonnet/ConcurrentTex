@@ -19,15 +19,15 @@ public class UnitData {
     private final Printer printer;
     private final ExecutorService executor;
     private final Lock printLock = new ReentrantLock();
-    private Map<Integer, Segment> segments;
-    private Map<Integer, List<Page>> pages;
-    private AtomicBoolean unableToBreak;
+    private final Map<Integer, Segment> segments;
+    private final Map<Integer, List<Page>> pages;
+    private final AtomicBoolean unableToBreak;
     private int printedPages = 0, printQueuePages = 0;
 
 
     public UnitData(Configuration config, Printer printer, ExecutorService executor) {
         this.segments = new ConcurrentHashMap<>();
-        this.pages = new ConcurrentHashMap<>();
+        this.pages = new ConcurrentHashMap<>(); //TODO maybe convert to normal hashMap (should not have any time benefit)
         this.unableToBreak = new AtomicBoolean(false);
         this.config = config;
         this.printer = printer;

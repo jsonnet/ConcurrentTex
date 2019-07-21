@@ -29,7 +29,7 @@ public class Rocket {
                 unitThreads[i].start();
             }
 
-            // We wait for the process to die
+            // We wait for the process to die ( join -> join(0) -> wait(0) )
             for (UnitHandler uh : unitThreads) {
                 uh.join();
             }

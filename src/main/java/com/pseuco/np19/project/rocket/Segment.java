@@ -21,8 +21,8 @@ public class Segment {
     private final int id;
     private final UnitData udata;
     private final ExecutorService executor;
-    private ConcurrentHashMap<Integer, List<Item<Renderable>>> items;
-    private AtomicInteger expected = new AtomicInteger(-1);
+    private final ConcurrentHashMap<Integer, List<Item<Renderable>>> items;
+    private final AtomicInteger expected = new AtomicInteger(-1);
 
     public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata, int id) {
         this.items = new ConcurrentHashMap<>();
@@ -47,7 +47,7 @@ public class Segment {
                 try {
                     //This works (also correct order!)
                     LinkedList<Item<Renderable>> itemList = new LinkedList<>();
-                    for (List l1 : items.values()) {
+                    for (List<Item<Renderable>> l1 : items.values()) {
                         itemList.addAll(l1);
                     }
 

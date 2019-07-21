@@ -8,12 +8,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * This class will create a ThreadPool and submit the tasks to the threads
- * The paragraphs will be assign to workers and if a segement is ready a worker
- * will get the task to handle the rendering of the pages...
- * <p>
- * Finally this thread will print the pages to the document or will take care of
- * printing an ErrorPage!
+ * This class will create a ThreadPool, start the parser and then wait until the tasks
+ * (i.e. all Paragraphs have been processed and pages are printed) are done
+ * In case of an error (i.e. unableToBreak) the thread will print the error page and end the unit asap
+ * Finally this thread will shutdown the ThreadPool and finish the document (i.e. close the writer)
  */
 public class UnitHandler extends Thread {
 

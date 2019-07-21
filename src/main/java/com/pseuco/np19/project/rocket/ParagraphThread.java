@@ -18,7 +18,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
     private final UnitData udata;
     private final Job job;
     private final ExecutorService executor;
-    private LinkedList<Item<Renderable>> items = new LinkedList<>();
+    private final LinkedList<Item<Renderable>> items = new LinkedList<>();
 
     public ParagraphThread(UnitData udata, Job job, ExecutorService executor) {
         this.udata = udata;
