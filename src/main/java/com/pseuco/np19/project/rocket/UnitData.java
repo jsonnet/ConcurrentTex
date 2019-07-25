@@ -68,21 +68,26 @@ public class UnitData {
                 try {
                     printer.printPages(pages.get(printedPages));
                     printedPages++;
-                    // Only for short time lock on udata to notify UnitHandler
-                    synchronized (this) {
-                        this.notify();
-                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     printLock.unlock();
+                }
+                // Only for short time lock on udata to notify UnitHandler
+                synchronized (this) {
+                    this.notify();
                 }
             });
         }
     }
 
     public int getPrintedPages() {
-        return this.printedPages;
+        printLock.lock();
+        try {
+            return this.printedPages;
+        } finally {
+            printLock.unlock();
+        }
     }
 
     public boolean isUnableToBreak() {
