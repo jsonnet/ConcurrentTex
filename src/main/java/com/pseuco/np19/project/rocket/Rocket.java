@@ -34,7 +34,6 @@ public class Rocket {
                 uh.join();
             }
 
-            //System.out.println("Active threads: " + Thread.activeCount());
             System.exit(0);
         } catch (CLIException error) {
             System.err.println(error.getMessage());

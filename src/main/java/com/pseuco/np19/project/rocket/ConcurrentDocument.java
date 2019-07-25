@@ -16,7 +16,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     private int segmentCounter;
     private int paragraphCounter = -1;
     private BlockElement lastBlockElement;
-    private /*volatile*/ boolean isFinished;
+    private boolean isFinished;
 
     public ConcurrentDocument(UnitData udata, ExecutorService executor) {
         this.isFinished = false;
@@ -65,17 +65,15 @@ public class ConcurrentDocument implements DocumentBuilder {
     public synchronized void finish() {
         // Append last pageBreak at the end of whole document
         this.appendForcedPageBreak(null);
-        // This flag is only set once by one thread and never again so volatile boolean is enough w/o CAS
+        // This flag is only set once by one thread and never again
         this.isFinished = true;
     }
 
-    // We just read the value here, volatile there suggests it being thread-safe
     public synchronized boolean isFinished() {
         return this.isFinished;
     }
 
-    // gets called after document is finished and only by one thread: so no synchronized needed
-    //FIXME is this a data race again? check while loop, but should not be as it is never check when isFinished is false!
+    // gets called after document is finished and short circuit eval suggests no prior read
     public int getSegmentCounter() {
         return segmentCounter;
     }

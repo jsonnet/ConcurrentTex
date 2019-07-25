@@ -10,7 +10,6 @@ import com.pseuco.np19.project.slug.tree.block.Paragraph;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
@@ -31,7 +30,7 @@ public class ParagraphThread implements Runnable, IBlockVisitor {
         //write result back into job since it is finished after visit
         job.setFinishedList(this.items);
         //close this job again and exit.
-        udata.closeJob(job); //FIXME may due a change! see method description
+        udata.closeJob(job);
     }
 
     @Override

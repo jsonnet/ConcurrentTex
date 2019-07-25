@@ -43,7 +43,7 @@ public class UnitHandler extends Thread {
                 e.printStackTrace();
             }
         });
-        // We are starting the parsing, but no need too join, as it signals with finish call!
+        // We are starting the parsing, but no need to join, as it signals with finish call!
         parserThread.start();
 
         // Here we wait (i.e. let the thread idle and give it's CPU time to the threadpool) for the whole Unit to be worked and printed

@@ -20,11 +20,11 @@ public class Segment {
     private final int id;
     private final UnitData udata;
     private final ExecutorService executor;
-    private final /*Concurrent*/ HashMap<Integer, List<Item<Renderable>>> items;
-    private /*final AtomicInteger*/ int expected = -1; //new AtomicInteger(-1);
+    private final HashMap<Integer, List<Item<Renderable>>> items;
+    private int expected = -1;
 
     public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata, int id) {
-        this.items = new /*Concurrent*/HashMap<>();
+        this.items = new HashMap<>();
         this.printer = printer;
         this.config = config;
         this.executor = executor;
@@ -37,10 +37,10 @@ public class Segment {
         this.items.put(seqNmbr, l);
 
         // only set expected if it has not been set yet
-        if (expected != -1) this.expected = expected; //.compareAndSet(-1, expected);
+        if (expected != -1) this.expected = expected;
 
         // Render the pages of this segment if the segment is complete
-        if (this.expected/*.get()*/ == this.items.size()) {
+        if (this.expected == this.items.size()) {
             //Rendering is a job for the executor
             executor.submit(() -> {
                 try {

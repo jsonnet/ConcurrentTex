@@ -22,13 +22,13 @@ public class UnitData {
     private final Map<Integer, Segment> segments;
     private final Map<Integer, List<Page>> pages;
     private final AtomicBoolean unableToBreak;
-    private int printedPages = 0, printQueuePages = 0;
     private final Lock breakLock = new ReentrantLock();
+    private int printedPages = 0, printQueuePages = 0;
 
 
     public UnitData(Configuration config, Printer printer, ExecutorService executor) {
         this.segments = new ConcurrentHashMap<>();
-        this.pages = new ConcurrentHashMap<>(); //TODO maybe convert to normal hashMap (should not have any time benefit)
+        this.pages = new ConcurrentHashMap<>();
         this.unableToBreak = new AtomicBoolean(false);
         this.config = config;
         this.printer = printer;
@@ -61,7 +61,6 @@ public class UnitData {
         this.pages.put(seq, l);
 
         // Submit all possible print jobs as the correct order is not given at this point we need to check
-        //TODO printQueuePages data race if not sync!
         while (pages.containsKey(printQueuePages)) {
             printQueuePages++;
             executor.submit(() -> {
