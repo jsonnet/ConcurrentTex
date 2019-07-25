@@ -16,7 +16,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     private int segmentCounter;
     private int paragraphCounter = -1;
     private BlockElement lastBlockElement;
-    private volatile boolean isFinished;
+    private /*volatile*/ boolean isFinished;
 
     public ConcurrentDocument(UnitData udata, ExecutorService executor) {
         this.isFinished = false;
@@ -62,7 +62,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     }
 
     @Override
-    public void finish() {
+    public synchronized void finish() {
         // Append last pageBreak at the end of whole document
         this.appendForcedPageBreak(null);
         // This flag is only set once by one thread and never again so volatile boolean is enough w/o CAS
@@ -70,7 +70,7 @@ public class ConcurrentDocument implements DocumentBuilder {
     }
 
     // We just read the value here, volatile there suggests it being thread-safe
-    public boolean isFinished() {
+    public synchronized boolean isFinished() {
         return this.isFinished;
     }
 
