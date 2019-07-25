@@ -36,6 +36,7 @@ public class UnitData {
 
     /**
      * This will take the result and add it to the correct position in the segments map
+     * !! THIS WILL LOCK EVERY ADD ACCESS ON SEGMENT, SO SEGMENT IS NOT PARALLEL!!
      * sync has to be here -> Lukas
      */
     public synchronized void closeJob(Job job) {

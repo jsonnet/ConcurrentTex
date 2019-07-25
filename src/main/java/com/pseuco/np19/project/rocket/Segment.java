@@ -7,11 +7,10 @@ import com.pseuco.np19.project.launcher.breaker.item.Item;
 import com.pseuco.np19.project.launcher.printer.Printer;
 import com.pseuco.np19.project.launcher.render.Renderable;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.pseuco.np19.project.launcher.breaker.Breaker.breakIntoPieces;
 
@@ -21,11 +20,11 @@ public class Segment {
     private final int id;
     private final UnitData udata;
     private final ExecutorService executor;
-    private final ConcurrentHashMap<Integer, List<Item<Renderable>>> items;
-    private final AtomicInteger expected = new AtomicInteger(-1);
+    private final /*Concurrent*/ HashMap<Integer, List<Item<Renderable>>> items;
+    private /*final AtomicInteger*/ int expected = -1; //new AtomicInteger(-1);
 
     public Segment(ExecutorService executor, Configuration config, Printer printer, UnitData udata, int id) {
-        this.items = new ConcurrentHashMap<>();
+        this.items = new /*Concurrent*/HashMap<>();
         this.printer = printer;
         this.config = config;
         this.executor = executor;
@@ -38,10 +37,10 @@ public class Segment {
         this.items.put(seqNmbr, l);
 
         // only set expected if it has not been set yet
-        if (expected != -1) this.expected.compareAndSet(-1, expected);
+        if (expected != -1) this.expected = expected; //.compareAndSet(-1, expected);
 
         // Render the pages of this segment if the segment is complete
-        if (this.expected.get() == this.items.size()) {
+        if (this.expected/*.get()*/ == this.items.size()) {
             //Rendering is a job for the executor
             executor.submit(() -> {
                 try {
