@@ -23,6 +23,7 @@ public class UnitData {
     private final Map<Integer, List<Page>> pages;
     private final AtomicBoolean unableToBreak;
     private int printedPages = 0, printQueuePages = 0;
+    private final Lock breakLock = new ReentrantLock();
 
 
     public UnitData(Configuration config, Printer printer, ExecutorService executor) {
@@ -92,7 +93,12 @@ public class UnitData {
     }
 
     public boolean isUnableToBreak() {
-        return this.unableToBreak.get();
+        breakLock.lock();
+        try {
+            return this.unableToBreak.get();
+        } finally {
+            breakLock.unlock();
+        }
     }
 
     /**
@@ -101,7 +107,12 @@ public class UnitData {
      */
     public void setUnableToBreak() {
         // this one needs to use CAS as multiple threads could set the flag at once
-        this.unableToBreak.compareAndSet(false, true);
+        breakLock.lock();
+        try {
+            this.unableToBreak.compareAndSet(false, true);
+        } finally {
+            breakLock.unlock();
+        }
         synchronized (this) {
             this.notify();
         }
