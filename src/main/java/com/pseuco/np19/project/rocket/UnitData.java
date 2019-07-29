@@ -37,8 +37,7 @@ public class UnitData {
 
     /**
      * This will take the result and add it to the correct position in the segments map
-     * !! THIS WILL LOCK EVERY ADD ACCESS ON SEGMENT, SO SEGMENT IS NOT PARALLEL!!
-     * sync has to be here -> Lukas
+     * sync has to be here...
      */
     public synchronized void closeJob(Job job) {
         int segID = job.getSegmentID();
@@ -105,7 +104,7 @@ public class UnitData {
      * this will not be reversible
      */
     public void setUnableToBreak() {
-        // this one needs to use CAS as multiple threads could set the flag at once
+        // this one uses CAS, so the flag is only set once
         breakLock.lock();
         try {
             this.unableToBreak.compareAndSet(false, true);
