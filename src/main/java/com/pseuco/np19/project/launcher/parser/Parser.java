@@ -114,8 +114,16 @@ public class Parser {
     /**
      * Aborts the parsing process.
      */
-    public void abort() {
+    public synchronized void abort() {
         this.aborted = true;
+    }
+
+    /**
+     *
+     * @return if the parser should be aborted
+     */
+    public synchronized boolean getAborted(){
+        return aborted;
     }
 
     /**
@@ -124,7 +132,7 @@ public class Parser {
      * @throws IOException In case there is an error reading the document.
      */
     public void buildDocument() throws IOException {
-        while (!this.aborted && this.peek() > 0) {
+        while (!this.getAborted() && this.peek() > 0) {
             this.savePosition();
             if (this.accept('-')) {
                 this.lazyStartParagraph();
@@ -159,7 +167,7 @@ public class Parser {
                 this.activeParagraph.appendSpecial(this.getSavedPosition(), value);
             }
         }
-        if (!this.aborted) {
+        if (!this.getAborted()) {
             this.lazyEndParagraph();
             this.documentBuilder.finish();
         }

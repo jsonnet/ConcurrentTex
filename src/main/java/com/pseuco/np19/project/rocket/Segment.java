@@ -56,6 +56,7 @@ public class Segment {
                     udata.addPages(id, printer.renderPages(pieces));
                 } catch (UnableToBreakException e) {
                     System.out.println("Could not render. HELP");
+                    udata.setUnableToBreak();
                 }
             });
         }
